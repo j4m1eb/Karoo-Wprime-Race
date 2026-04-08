@@ -42,6 +42,7 @@ class WPrimeCritDataType(
     }
 
     override fun durationSec(config: WPrimeRaceConfig) = config.critDurationMin * 60.0
+    override fun showKj(config: WPrimeRaceConfig) = config.showKjCrit
 
     override fun targetPercent(elapsedSec: Double, durationSec: Double): Double {
         if (durationSec <= 0) return 100.0

@@ -57,6 +57,8 @@ fun WPrimeRaceView(
     criticalPower: Double,
     config: ViewConfig,
     showArrow: Boolean,
+    showKj: Boolean = false,      // true → display values in kJ instead of %
+    wPrimeJ: Double = 20000.0,    // total W' in joules (for kJ conversion)
 ) {
     val isWide = config.gridSize.first >= 60
 
@@ -80,8 +82,16 @@ fun WPrimeRaceView(
         ViewConfig.Alignment.RIGHT -> Alignment.End
     }
 
-    val currentText = "${currentPercent.roundToInt()}%"
-    val targetText = "T:${targetPercent.roundToInt()}%"
+    val currentText = if (showKj) {
+        "${"%.1f".format(currentPercent / 100.0 * wPrimeJ / 1000.0)}kJ"
+    } else {
+        "${currentPercent.roundToInt()}%"
+    }
+    val targetText = if (showKj) {
+        "T:${"%.1f".format(targetPercent / 100.0 * wPrimeJ / 1000.0)}kJ"
+    } else {
+        "T:${targetPercent.roundToInt()}%"
+    }
 
     // Calculate main number font size (same approach as colorspeed)
     val paint = Paint().apply {

@@ -48,6 +48,9 @@ abstract class WPrimeRaceDataTypeBase(
     /** Compute the target W'% at the given elapsed seconds and duration. */
     abstract fun targetPercent(elapsedSec: Double, durationSec: Double): Double
 
+    /** Whether this field should display in kJ (true) or % (false). */
+    abstract fun showKj(config: WPrimeRaceConfig): Boolean
+
     // ── Numeric stream ────────────────────────────────────────────────────────
 
     override fun startStream(emitter: Emitter<StreamState>) {
@@ -123,6 +126,8 @@ abstract class WPrimeRaceDataTypeBase(
                                 criticalPower = calculator.getCp(),
                                 config = config,
                                 showArrow = latestConfig.showArrow,
+                                showKj = showKj(latestConfig),
+                                wPrimeJ = latestConfig.anaerobicCapacityJ,
                             )
                         }.remoteViews
                     }

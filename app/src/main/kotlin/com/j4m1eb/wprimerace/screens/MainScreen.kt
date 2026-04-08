@@ -65,6 +65,9 @@ fun MainScreen(
     var critText by remember(config.critDurationMin) { mutableStateOf(config.critDurationMin.toString()) }
     var model by remember(config.modelType) { mutableStateOf(config.modelType) }
     var showArrow by remember(config.showArrow) { mutableStateOf(config.showArrow) }
+    var showKjTT by remember(config.showKjTT) { mutableStateOf(config.showKjTT) }
+    var showKjCrit by remember(config.showKjCrit) { mutableStateOf(config.showKjCrit) }
+    var showKjUsable by remember(config.showKjUsable) { mutableStateOf(config.showKjUsable) }
 
     var savedVisible by remember { mutableStateOf(false) }
 
@@ -82,6 +85,9 @@ fun MainScreen(
                     critDurationMin = crit,
                     modelType = model,
                     showArrow = showArrow,
+                    showKjTT = showKjTT,
+                    showKjCrit = showKjCrit,
+                    showKjUsable = showKjUsable,
                 )
             )
             savedVisible = true
@@ -158,6 +164,24 @@ fun MainScreen(
                 description = "Arrow indicates W\u2032 recovering (up) or depleting (down)",
                 checked = showArrow,
                 onCheckedChange = { showArrow = it },
+            )
+            ToggleCard(
+                title = "W\u2032 TT — show kJ",
+                description = "Display TT field values in kJ instead of %",
+                checked = showKjTT,
+                onCheckedChange = { showKjTT = it },
+            )
+            ToggleCard(
+                title = "W\u2032 Crit — show kJ",
+                description = "Display Crit field values in kJ instead of %",
+                checked = showKjCrit,
+                onCheckedChange = { showKjCrit = it },
+            )
+            ToggleCard(
+                title = "W\u2032 Usable — show kJ",
+                description = "Display Usable W\u2032 in kJ instead of %",
+                checked = showKjUsable,
+                onCheckedChange = { showKjUsable = it },
             )
 
             // ── Save ───────────────────────────────────────────────────────

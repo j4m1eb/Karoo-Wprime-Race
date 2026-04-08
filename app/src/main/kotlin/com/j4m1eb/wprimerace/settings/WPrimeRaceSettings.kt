@@ -22,6 +22,10 @@ data class WPrimeRaceConfig(
     val critDurationMin: Double = 60.0,
     val modelType: WPrimeModelType = WPrimeModelType.SKIBA_DIFFERENTIAL,
     val showArrow: Boolean = true,
+    // kJ display toggles — default off (% mode)
+    val showKjTT: Boolean = false,
+    val showKjCrit: Boolean = false,
+    val showKjUsable: Boolean = false,
 ) {
     val anaerobicCapacityJ: Double get() = anaerobicCapacityKJ * 1000.0
 }
@@ -35,6 +39,9 @@ class WPrimeRaceSettings(private val context: Context) {
         private val KEY_CRIT_DURATION = doublePreferencesKey("crit_duration_min")
         private val KEY_MODEL = stringPreferencesKey("model_type")
         private val KEY_SHOW_ARROW = booleanPreferencesKey("show_arrow")
+        private val KEY_SHOW_KJ_TT = booleanPreferencesKey("show_kj_tt")
+        private val KEY_SHOW_KJ_CRIT = booleanPreferencesKey("show_kj_crit")
+        private val KEY_SHOW_KJ_USABLE = booleanPreferencesKey("show_kj_usable")
     }
 
     val configFlow: Flow<WPrimeRaceConfig> = context.dataStore.data.map { prefs ->
@@ -45,6 +52,9 @@ class WPrimeRaceSettings(private val context: Context) {
             critDurationMin = prefs[KEY_CRIT_DURATION] ?: 60.0,
             modelType = WPrimeModelType.valueOf(prefs[KEY_MODEL] ?: WPrimeModelType.SKIBA_DIFFERENTIAL.name),
             showArrow = prefs[KEY_SHOW_ARROW] ?: true,
+            showKjTT = prefs[KEY_SHOW_KJ_TT] ?: false,
+            showKjCrit = prefs[KEY_SHOW_KJ_CRIT] ?: false,
+            showKjUsable = prefs[KEY_SHOW_KJ_USABLE] ?: false,
         )
     }.distinctUntilChanged()
 
@@ -56,6 +66,9 @@ class WPrimeRaceSettings(private val context: Context) {
             prefs[KEY_CRIT_DURATION] = config.critDurationMin
             prefs[KEY_MODEL] = config.modelType.name
             prefs[KEY_SHOW_ARROW] = config.showArrow
+            prefs[KEY_SHOW_KJ_TT] = config.showKjTT
+            prefs[KEY_SHOW_KJ_CRIT] = config.showKjCrit
+            prefs[KEY_SHOW_KJ_USABLE] = config.showKjUsable
         }
     }
 }

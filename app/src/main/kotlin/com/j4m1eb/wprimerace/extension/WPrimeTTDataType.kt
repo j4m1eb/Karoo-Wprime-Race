@@ -19,6 +19,7 @@ class WPrimeTTDataType(
     companion object { const val TYPE_ID = "wprime-tt" }
 
     override fun durationSec(config: WPrimeRaceConfig) = config.ttDurationMin * 60.0
+    override fun showKj(config: WPrimeRaceConfig) = config.showKjTT
 
     override fun targetPercent(elapsedSec: Double, durationSec: Double): Double {
         if (durationSec <= 0) return 100.0

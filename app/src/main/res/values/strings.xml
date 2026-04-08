@@ -5,6 +5,10 @@
     <string name="wprime_tt_description">W\' balance vs linear TT pacing target</string>
     <string name="wprime_crit_title">W\' Crit</string>
     <string name="wprime_crit_description">W\' balance vs progressive crit pacing curve</string>
+    <string name="wprime_crit_time_title">W\' Time to Floor</string>
+    <string name="wprime_crit_time_description">Seconds at current power before hitting the phase floor</string>
+    <string name="wprime_crit_usable_title">W\' Usable</string>
+    <string name="wprime_crit_usable_description">W\' available above the current phase floor</string>
     <!-- Settings -->
     <string name="settings_title">W Prime Race Settings</string>
     <string name="section_wp_params">W\' Parameters</string>
