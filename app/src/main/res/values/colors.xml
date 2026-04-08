@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Pacing status colours -->
+    <color name="on_target">#109C77</color>       <!-- green: at or above target -->
+    <color name="slightly_behind">#E5683C</color>  <!-- orange: 1-8% behind -->
+    <color name="behind">#C7292A</color>           <!-- red: 8-20% behind -->
+    <color name="very_behind">#AF26A0</color>      <!-- purple: 20%+ behind -->
+    <!-- Text colours -->
+    <color name="text_on_light">#000000</color>
+    <color name="text_on_dark">#FFFFFF</color>
+</resources>
