@@ -1,46 +1,58 @@
 package com.j4m1eb.wprimerace.ui
 
 import android.annotation.SuppressLint
+import android.graphics.Paint
+import android.graphics.Typeface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceModifier
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.background
 import androidx.glance.layout.Alignment
-import androidx.glance.layout.Box
 import androidx.glance.layout.Column
+import androidx.glance.layout.Row
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
+import androidx.glance.layout.height
 import androidx.glance.layout.padding
 import androidx.glance.text.FontFamily
-import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import io.hammerhead.karooext.models.ViewConfig
-import kotlin.math.ceil
 
 /**
- * Simple single-value Glance view used by the W' floor fields (Time to Floor, Usable W').
- *
- * Shows an optional small label in the header and a large main value, coloured by [bgColor].
+ * Single-value Glance view for W' floor fields (Time to Floor, Usable W').
+ * [mainNum] is the number, [mainUnit] is the suffix at 60% size (pass "" for none).
  */
 @SuppressLint("RestrictedApi")
 @Composable
 fun WPrimeSingleView(
     context: android.content.Context,
-    mainValue: String,           // large number, e.g. "23s", "20%", "4.0kJ", "---"
-    headerLabel: String,         // small top label, e.g. "TO FLOOR", "USABLE"
+    mainNum: String,
+    mainUnit: String,
+    headerLabel: String,
     bgColor: Color,
     config: ViewConfig,
 ) {
     val density = context.resources.displayMetrics.density
-    val viewHeightDp = ceil(config.viewSize.second / density)
-    val headerHeightDp = maxOf(18f, viewHeightDp * 0.25f)
-    val numberSizeSp = config.textSize.toFloat()
+    val finalTextSize = config.textSize.toFloat()
+    val viewHeightDp = kotlin.math.ceil(config.viewSize.second / density)
+    val topRowPadding = if (config.viewSize.first <= 238) 2f else 0f
+
+    // Identical font metrics calculation to WPrimeRaceView — positions the
+    // main value flush at the field bottom matching the right-hand field
+    val numPaint = Paint().apply {
+        textSize = finalTextSize * density
+        typeface = Typeface.MONOSPACE
+    }
+    val fm = numPaint.fontMetrics
+    val baselineFromTopDp = (-fm.top) / density
+    val topRowHeight = maxOf(20f, viewHeightDp - topRowPadding - baselineFromTopDp - 5f)
 
     val textColor = Color.White
     val textAlign = when (config.alignment) {
@@ -54,70 +66,75 @@ fun WPrimeSingleView(
         ViewConfig.Alignment.RIGHT  -> Alignment.End
     }
 
-    Box(
+    Column(
         modifier = GlanceModifier
             .fillMaxSize()
+            .padding(start = 5.dp, end = 5.dp, top = topRowPadding.dp)
             .cornerRadius(8.dp)
             .background(ColorProvider(bgColor)),
+        horizontalAlignment = hAlign,
     ) {
-        Column(
+        // Small header label
+        Row(
             modifier = GlanceModifier
-                .fillMaxSize()
-                .padding(start = 5.dp, end = 5.dp),
+                .fillMaxWidth()
+                .height(topRowHeight.dp),
+            verticalAlignment = Alignment.CenterVertically,
             horizontalAlignment = hAlign,
         ) {
-            // Small header label
-            Box(
-                modifier = GlanceModifier
-                    .fillMaxWidth()
-                    .padding(top = 2.dp),
-                contentAlignment = when (config.alignment) {
-                    ViewConfig.Alignment.CENTER -> Alignment.Center
-                    ViewConfig.Alignment.LEFT   -> Alignment.CenterStart
-                    ViewConfig.Alignment.RIGHT  -> Alignment.CenterEnd
-                },
-            ) {
-                Text(
-                    text = headerLabel,
-                    style = TextStyle(
-                        color = ColorProvider(textColor.copy(alpha = 0.75f)),
-                        fontSize = 12.sp,
-                        fontFamily = FontFamily.Monospace,
-                        textAlign = textAlign,
-                    ),
-                )
-            }
-            // Main large value
             Text(
-                modifier = GlanceModifier.fillMaxWidth(),
-                text = mainValue,
+                text = headerLabel,
                 style = TextStyle(
-                    color = ColorProvider(textColor),
-                    fontSize = numberSizeSp.sp,
-                    fontFamily = FontFamily.Monospace,
-                    fontWeight = FontWeight.Normal,
+                    color = ColorProvider(textColor.copy(alpha = 0.85f)),
+                    fontSize = TextUnit(18f, TextUnitType.Sp),
                     textAlign = textAlign,
                 ),
             )
+        }
+        // Number full-size, unit at 60% — Row with Alignment.Top keeps Glance stable
+        Row(
+            modifier = GlanceModifier.fillMaxWidth(),
+            verticalAlignment = Alignment.Top,
+            horizontalAlignment = hAlign,
+        ) {
+            Text(
+                text = mainNum,
+                style = TextStyle(
+                    color = ColorProvider(textColor),
+                    fontSize = TextUnit(finalTextSize, TextUnitType.Sp),
+                    fontFamily = FontFamily.Monospace,
+                    textAlign = textAlign,
+                ),
+            )
+            if (mainUnit.isNotEmpty()) {
+                val unitSize = finalTextSize * 0.60f
+                Text(
+                    text = mainUnit,
+                    modifier = GlanceModifier.padding(start = 2.dp, top = (unitSize * 0.38f).dp),
+                    style = TextStyle(
+                        color = ColorProvider(textColor),
+                        fontSize = TextUnit(unitSize, TextUnitType.Sp),
+                        fontFamily = FontFamily.Monospace,
+                    ),
+                )
+            }
         }
     }
 }
 
 // ── Colour helpers for floor fields ──────────────────────────────────────────
 
-/** Colour for the Time to Floor field based on seconds remaining. */
 fun timeToFloorColor(seconds: Double): Color = when {
-    seconds == Double.MAX_VALUE -> Color(0xFF109C77)   // recovering — green
-    seconds > 20.0              -> Color(0xFF109C77)   // comfortable — green
-    seconds > 10.0              -> Color(0xFFE5683C)   // use carefully — orange
-    seconds > 5.0               -> Color(0xFFC7292A)   // danger — red
-    else                        -> Color(0xFFAF26A0)   // last resort — purple
+    seconds == Double.MAX_VALUE -> Color(0xFF109C77)
+    seconds > 20.0              -> Color(0xFF109C77)
+    seconds > 10.0              -> Color(0xFFE5683C)
+    seconds > 5.0               -> Color(0xFFC7292A)
+    else                        -> Color(0xFFAF26A0)
 }
 
-/** Colour for the Usable W' field based on usable % of total W'. */
 fun usableWPrimeColor(usablePercent: Double): Color = when {
-    usablePercent > 20.0 -> Color(0xFF109C77)   // good headroom — green
-    usablePercent > 10.0 -> Color(0xFFE5683C)   // shrinking — orange
-    usablePercent > 5.0  -> Color(0xFFC7292A)   // nearly at floor — red
-    else                 -> Color(0xFFAF26A0)   // at/below floor — purple
+    usablePercent > 20.0 -> Color(0xFF109C77)
+    usablePercent > 10.0 -> Color(0xFFE5683C)
+    usablePercent > 5.0  -> Color(0xFFC7292A)
+    else                 -> Color(0xFFAF26A0)
 }

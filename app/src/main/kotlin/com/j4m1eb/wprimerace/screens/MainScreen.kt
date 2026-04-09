@@ -1,8 +1,5 @@
 package com.j4m1eb.wprimerace.screens
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -40,6 +38,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -189,21 +188,13 @@ fun MainScreen(
                 onClick = ::save,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
-            ) {
-                Text("Save", fontWeight = FontWeight.SemiBold)
-            }
-
-            AnimatedVisibility(
-                visible = savedVisible,
-                enter = fadeIn(),
-                exit = fadeOut(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (savedVisible) Color(0xFF109C77) else MaterialTheme.colorScheme.primary,
+                ),
             ) {
                 Text(
-                    text = "Saved",
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+                    if (savedVisible) "Saved ✓" else "Save",
+                    fontWeight = FontWeight.SemiBold,
                 )
             }
 

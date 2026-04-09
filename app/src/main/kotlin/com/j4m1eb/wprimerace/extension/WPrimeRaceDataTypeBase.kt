@@ -159,19 +159,24 @@ abstract class WPrimeRaceDataTypeBase(
                 Triple(currentPct, targetPct, power)
             }
 
-    // ── Preview flow (simulates progressive depletion) ────────────────────────
+    // ── Preview flow ──────────────────────────────────────────────────────────
+    // Sweeps current W'% through all four colour zones so every state is visible
+    // in the Karoo field picker demo screen.
+    //   gap = target - current:  ≤0 → green  ≤8 → orange  ≤20 → red  >20 → purple
+    // Target is fixed at 80 %; current oscillates 50–90 % over ~12 s.
 
     private fun previewFlow(cfg: WPrimeRaceConfig, calculator: WPrimeCalculator) =
         kotlinx.coroutines.flow.flow<Triple<Double, Double, Double>> {
             var t = 0.0
-            val dur = durationSec(cfg)
+            val cp = cfg.criticalPower
             while (true) {
-                val power = cfg.criticalPower * (1.0 + 0.4 * sin(t * 2 * PI / 30.0))
-                calculator.update(power, System.currentTimeMillis())
-                val elapsed = t * (dur / 180.0)  // run through the full target in ~180 preview ticks
-                emit(Triple(calculator.getWPrimePercent(), targetPercent(elapsed, dur), power))
+                val targetPct  = 80.0
+                // sine sweep: 70 + 22*sin → range [48, 92], period = 24 ticks = 12 s
+                val currentPct = 70.0 + 22.0 * sin(t * 2 * PI / 24.0)
+                val power      = cp * (1.0 + 0.3 * sin(t * 2 * PI / 8.0))
+                emit(Triple(currentPct, targetPct, power))
                 t += 1.0
-                delay(2000L)
+                delay(500L)
             }
         }
 

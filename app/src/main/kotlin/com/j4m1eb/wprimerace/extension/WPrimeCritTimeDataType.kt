@@ -140,14 +140,16 @@ class WPrimeCritTimeDataType(
                     val floorJ = critPhaseFloorFraction(elapsed, raceSec) * c.anaerobicCapacityJ
                     val seconds = timeToFloorSec(calculator.getCurrentWPrimeJ(), floorJ, power, c.criticalPower)
 
-                    val mainValue = if (seconds == Double.MAX_VALUE) "---" else "${seconds.roundToInt()}s"
-                    val bgColor = timeToFloorColor(seconds)
+                    val mainNum  = if (seconds == Double.MAX_VALUE) "---" else "${seconds.roundToInt()}"
+                    val mainUnit = if (seconds == Double.MAX_VALUE) "" else "s"
+                    val bgColor  = timeToFloorColor(seconds)
 
                     val view = withContext(Dispatchers.Main) {
                         glance.compose(context, DpSize.Unspecified) {
                             WPrimeSingleView(
                                 context = context,
-                                mainValue = mainValue,
+                                mainNum = mainNum,
+                                mainUnit = mainUnit,
                                 headerLabel = "TO FLOOR",
                                 bgColor = bgColor,
                                 config = config,

@@ -142,18 +142,17 @@ class WPrimeCritUsableDataType(
                     val usableJ = (calculator.getCurrentWPrimeJ() - floorJ).coerceAtLeast(0.0)
                     val usablePct = if (c.anaerobicCapacityJ > 0) (usableJ / c.anaerobicCapacityJ) * 100.0 else 0.0
 
-                    val mainValue = if (latestConfig.showKjUsable) {
-                        "${"%.1f".format(usableJ / 1000.0)}kJ"
-                    } else {
-                        "${usablePct.roundToInt()}%"
-                    }
-                    val bgColor = usableWPrimeColor(usablePct)
+                    val mainNum  = if (latestConfig.showKjUsable) "%.1f".format(usableJ / 1000.0)
+                                   else "${usablePct.roundToInt()}"
+                    val mainUnit = if (latestConfig.showKjUsable) "kJ" else "%"
+                    val bgColor  = usableWPrimeColor(usablePct)
 
                     val view = withContext(Dispatchers.Main) {
                         glance.compose(context, DpSize.Unspecified) {
                             WPrimeSingleView(
                                 context = context,
-                                mainValue = mainValue,
+                                mainNum = mainNum,
+                                mainUnit = mainUnit,
                                 headerLabel = "USABLE W\u2032",
                                 bgColor = bgColor,
                                 config = config,
