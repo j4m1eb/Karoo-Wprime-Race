@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ExtensionInfo
+    displayName="@string/extension_name"
+    icon="@drawable/ic_wprime"
+    id="karoowprimerace"
+    scansDevices="false">
+    <DataType
+        typeId="wprime-tt"
+        displayName="@string/wprime_tt_title"
+        description="@string/wprime_tt_description"
+        graphical="true"
+        icon="@drawable/ic_wprime" />
+    <DataType
+        typeId="wprime-crit"
+        displayName="@string/wprime_crit_title"
+        description="@string/wprime_crit_description"
+        graphical="true"
+        icon="@drawable/ic_wprime" />
+    <DataType
+        typeId="wprime-crit-time"
+        displayName="@string/wprime_crit_time_title"
+        description="@string/wprime_crit_time_description"
+        graphical="true"
+        icon="@drawable/ic_wprime" />
+    <DataType
+        typeId="wprime-crit-usable"
+        displayName="@string/wprime_crit_usable_title"
+        description="@string/wprime_crit_usable_description"
+        graphical="true"
+        icon="@drawable/ic_wprime" />
+</ExtensionInfo>

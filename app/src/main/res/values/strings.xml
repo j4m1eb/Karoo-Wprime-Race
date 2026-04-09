@@ -27,4 +27,6 @@
     <string name="save">Save</string>
     <string name="saved">Saved</string>
     <string name="enter_valid_number">Please enter a valid number</string>
+    <!-- Arrow drawable path data -->
+    <string name="arrow_path_data">M4,9 L13.5,9 L13.5,6 L21,12 L13.5,18 L13.5,15 L4,15 Z</string>
 </resources>

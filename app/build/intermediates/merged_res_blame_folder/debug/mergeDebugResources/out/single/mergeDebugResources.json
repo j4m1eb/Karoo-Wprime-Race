@@ -1,0 +1,66 @@
+[
+    {
+        "merged": "com.j4m1eb.wprimerace.app-debug-53:/drawable_ic_direction_arrow_n15.xml.flat",
+        "source": "com.j4m1eb.wprimerace.app-main-55:/drawable/ic_direction_arrow_n15.xml"
+    },
+    {
+        "merged": "com.j4m1eb.wprimerace.app-debug-53:/drawable_ic_direction_arrow.xml.flat",
+        "source": "com.j4m1eb.wprimerace.app-main-55:/drawable/ic_direction_arrow.xml"
+    },
+    {
+        "merged": "com.j4m1eb.wprimerace.app-debug-53:/xml_extension_info.xml.flat",
+        "source": "com.j4m1eb.wprimerace.app-main-55:/xml/extension_info.xml"
+    },
+    {
+        "merged": "com.j4m1eb.wprimerace.app-debug-53:/drawable_ic_direction_arrow_p90.xml.flat",
+        "source": "com.j4m1eb.wprimerace.app-main-55:/drawable/ic_direction_arrow_p90.xml"
+    },
+    {
+        "merged": "com.j4m1eb.wprimerace.app-debug-53:/drawable_ic_direction_arrow_p30.xml.flat",
+        "source": "com.j4m1eb.wprimerace.app-main-55:/drawable/ic_direction_arrow_p30.xml"
+    },
+    {
+        "merged": "com.j4m1eb.wprimerace.app-debug-53:/drawable_ic_direction_arrow_p75.xml.flat",
+        "source": "com.j4m1eb.wprimerace.app-main-55:/drawable/ic_direction_arrow_p75.xml"
+    },
+    {
+        "merged": "com.j4m1eb.wprimerace.app-debug-53:/drawable_ic_direction_arrow_p15.xml.flat",
+        "source": "com.j4m1eb.wprimerace.app-main-55:/drawable/ic_direction_arrow_p15.xml"
+    },
+    {
+        "merged": "com.j4m1eb.wprimerace.app-debug-53:/drawable_ic_direction_arrow_n90.xml.flat",
+        "source": "com.j4m1eb.wprimerace.app-main-55:/drawable/ic_direction_arrow_n90.xml"
+    },
+    {
+        "merged": "com.j4m1eb.wprimerace.app-debug-53:/drawable_ic_direction_arrow_n75.xml.flat",
+        "source": "com.j4m1eb.wprimerace.app-main-55:/drawable/ic_direction_arrow_n75.xml"
+    },
+    {
+        "merged": "com.j4m1eb.wprimerace.app-debug-53:/drawable_ic_direction_arrow_n30.xml.flat",
+        "source": "com.j4m1eb.wprimerace.app-main-55:/drawable/ic_direction_arrow_n30.xml"
+    },
+    {
+        "merged": "com.j4m1eb.wprimerace.app-debug-53:/drawable_ic_direction_arrow_p60.xml.flat",
+        "source": "com.j4m1eb.wprimerace.app-main-55:/drawable/ic_direction_arrow_p60.xml"
+    },
+    {
+        "merged": "com.j4m1eb.wprimerace.app-debug-53:/drawable_ic_direction_arrow_n45.xml.flat",
+        "source": "com.j4m1eb.wprimerace.app-main-55:/drawable/ic_direction_arrow_n45.xml"
+    },
+    {
+        "merged": "com.j4m1eb.wprimerace.app-debug-53:/drawable_ic_wprime_battery.xml.flat",
+        "source": "com.j4m1eb.wprimerace.app-main-55:/drawable/ic_wprime_battery.xml"
+    },
+    {
+        "merged": "com.j4m1eb.wprimerace.app-debug-53:/drawable_ic_wprime.xml.flat",
+        "source": "com.j4m1eb.wprimerace.app-main-55:/drawable/ic_wprime.xml"
+    },
+    {
+        "merged": "com.j4m1eb.wprimerace.app-debug-53:/drawable_ic_direction_arrow_n60.xml.flat",
+        "source": "com.j4m1eb.wprimerace.app-main-55:/drawable/ic_direction_arrow_n60.xml"
+    },
+    {
+        "merged": "com.j4m1eb.wprimerace.app-debug-53:/drawable_ic_direction_arrow_p45.xml.flat",
+        "source": "com.j4m1eb.wprimerace.app-main-55:/drawable/ic_direction_arrow_p45.xml"
+    }
+]

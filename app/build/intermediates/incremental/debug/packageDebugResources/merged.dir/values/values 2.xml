@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="behind">#C7292A</color>
+    <color name="on_target">#109C77</color>
+    <color name="slightly_behind">#E5683C</color>
+    <color name="text_on_dark">#FFFFFF</color>
+    <color name="text_on_light">#000000</color>
+    <color name="very_behind">#AF26A0</color>
+    <string name="app_name">W Prime Race</string>
+    <string name="enter_valid_number">Please enter a valid number</string>
+    <string name="extension_name">W Prime Race</string>
+    <string name="label_cp">Critical Power (CP)</string>
+    <string name="label_crit_duration">Crit Expected Duration</string>
+    <string name="label_model">Algorithm Model</string>
+    <string name="label_show_arrow">Show Trend Arrow</string>
+    <string name="label_tt_duration">TT Target Duration</string>
+    <string name="label_wprime">W\' (Anaerobic Capacity)</string>
+    <string name="save">Save</string>
+    <string name="saved">Saved</string>
+    <string name="section_crit">Criterium</string>
+    <string name="section_display">Display</string>
+    <string name="section_tt">Time Trial</string>
+    <string name="section_wp_params">W\' Parameters</string>
+    <string name="settings_title">W Prime Race Settings</string>
+    <string name="unit_kj">kJ</string>
+    <string name="unit_min">min</string>
+    <string name="unit_watts">W</string>
+    <string name="wprime_crit_description">W\' balance vs progressive crit pacing curve</string>
+    <string name="wprime_crit_time_description">Seconds at current power before hitting the phase floor</string>
+    <string name="wprime_crit_time_title">W\' Time to Floor</string>
+    <string name="wprime_crit_title">W\' Crit</string>
+    <string name="wprime_crit_usable_description">W\' available above the current phase floor</string>
+    <string name="wprime_crit_usable_title">W\' Usable</string>
+    <string name="wprime_tt_description">W\' balance vs linear TT pacing target</string>
+    <string name="wprime_tt_title">W\' TT</string>
+</resources>

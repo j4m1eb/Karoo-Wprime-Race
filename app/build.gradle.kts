@@ -76,12 +76,13 @@ android {
 
 dependencies {
     implementation(project(":lib"))
+    implementation(platform(libs.androidx.compose.bom))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.activity.compose)
-    implementation(bundles.compose.ui)
-    implementation(bundles.lifecycle)
+    implementation(libs.bundles.compose.ui)
+    implementation(libs.bundles.lifecycle)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.glance.appwidget)
