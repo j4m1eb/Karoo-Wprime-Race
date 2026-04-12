@@ -96,8 +96,12 @@ fun WPrimeRaceView(
     val targetNum      = if (showKj) "%.1f".format(targetPercent / 100.0 * wPrimeJ / 1000.0)
                          else "${targetPercent.roundToInt()}"
     val targetText     = "T:$targetNum$unit"          // single-width header (18sp, safe)
-    val unitSizeFull   = finalTextSize * 0.60f         // unit alongside full-size number
-    val unitSizeWide   = finalTextSize * 0.78f * 0.60f // unit alongside 78% target number
+    // Double-width has two number columns + arrow, so scale down to prevent clipping
+    val dwScale        = if (isDoubleWidth) 0.72f else 1.0f
+    val currentSize    = finalTextSize * dwScale
+    val targetSize     = currentSize * 0.78f
+    val unitSizeFull   = currentSize * 0.60f           // unit alongside full-size number
+    val unitSizeWide   = targetSize  * 0.60f           // unit alongside target number
 
     if (isDoubleWidth) {
         // ── Double-width: spacer pushes numbers low, then target | arrow | current ──
@@ -150,7 +154,7 @@ fun WPrimeRaceView(
                         text = targetNum,
                         style = TextStyle(
                             color = ColorProvider(textColor),
-                            fontSize = TextUnit(finalTextSize * 0.78f, TextUnitType.Sp),
+                            fontSize = TextUnit(targetSize, TextUnitType.Sp),
                             fontFamily = FontFamily.Monospace,
                             textAlign = TextAlign.Start,
                         ),
@@ -170,7 +174,7 @@ fun WPrimeRaceView(
                     Image(
                         provider = ImageProvider(arrowRes),
                         contentDescription = null,
-                        modifier = GlanceModifier.height(44.dp).width(44.dp).padding(top = 10.dp),
+                        modifier = GlanceModifier.height(36.dp).width(36.dp).padding(top = 8.dp),
                         colorFilter = ColorFilter.tint(ColorProvider(textColor)),
                     )
                 }
@@ -184,7 +188,7 @@ fun WPrimeRaceView(
                         text = currentNum,
                         style = TextStyle(
                             color = ColorProvider(textColor),
-                            fontSize = TextUnit(finalTextSize, TextUnitType.Sp),
+                            fontSize = TextUnit(currentSize, TextUnitType.Sp),
                             fontFamily = FontFamily.Monospace,
                             textAlign = TextAlign.End,
                         ),
