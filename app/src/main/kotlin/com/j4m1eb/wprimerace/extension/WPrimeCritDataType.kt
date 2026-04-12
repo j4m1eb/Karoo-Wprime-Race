@@ -1,5 +1,6 @@
 package com.j4m1eb.wprimerace.extension
 
+import com.j4m1eb.wprimerace.settings.CritCurvePoint
 import com.j4m1eb.wprimerace.settings.WPrimeRaceConfig
 import com.j4m1eb.wprimerace.settings.WPrimeRaceSettings
 import io.hammerhead.karooext.KarooSystemService
@@ -7,19 +8,17 @@ import io.hammerhead.karooext.KarooSystemService
 /**
  * W' Crit field.
  *
- * Target follows a progressive depletion curve designed for criterium racing:
- * conserve W' early (covering wheels, staying safe) and spend aggressively
- * in the final third when decisive moves and the sprint happen.
+ * Target follows a configurable depletion curve. The curve is defined by 4 interior
+ * breakpoints (set in the app settings) — the start (0% → 100%) and end (100% → 0%)
+ * are always fixed. Between breakpoints the target is linearly interpolated.
  *
- * Fixed curve (% of race elapsed → minimum W'% remaining):
- *   0%  → 100%
- *  20%  →  90%   (very conservative — 10% spent in first fifth)
- *  40%  →  75%   (still building — 15% spent)
- *  60%  →  55%   (heating up — 20% spent)
- *  80%  →  30%   (final push — 25% spent)
- * 100%  →   0%   (finish line — 30% spent)
- *
- * Between milestones the target is linearly interpolated.
+ * Default curve:
+ *   0%  → 100%  (race start)
+ *  25%  →  85%  (opening — conserve)
+ *  50%  →  65%  (mid-race)
+ *  75%  →  40%  (build)
+ *  92%  →  15%  (finale approach)
+ * 100%  →   0%  (finish line — empty the tank)
  */
 class WPrimeCritDataType(
     karooSystem: KarooSystemService,
@@ -27,30 +26,19 @@ class WPrimeCritDataType(
     extension: String,
 ) : WPrimeRaceDataTypeBase(karooSystem, settings, extension, TYPE_ID) {
 
-    companion object {
-        const val TYPE_ID = "wprime-crit"
-
-        // (race fraction 0-1, W'% target 0-100)
-        private val CURVE = listOf(
-            0.0  to 100.0,
-            0.2  to  90.0,
-            0.4  to  75.0,
-            0.6  to  55.0,
-            0.8  to  30.0,
-            1.0  to   0.0,
-        )
-    }
+    companion object { const val TYPE_ID = "wprime-crit" }
 
     override fun durationSec(config: WPrimeRaceConfig) = config.critDurationMin * 60.0
     override fun showKj(config: WPrimeRaceConfig) = config.showKjCrit
 
-    override fun targetPercent(elapsedSec: Double, durationSec: Double): Double {
+    override fun targetPercent(elapsedSec: Double, durationSec: Double, config: WPrimeRaceConfig): Double {
         if (durationSec <= 0) return 100.0
         val progress = (elapsedSec / durationSec).coerceIn(0.0, 1.0)
+        val curve = buildFullCurve(config.critCurve)
 
-        for (i in 0 until CURVE.size - 1) {
-            val (x0, y0) = CURVE[i]
-            val (x1, y1) = CURVE[i + 1]
+        for (i in 0 until curve.size - 1) {
+            val (x0, y0) = curve[i]
+            val (x1, y1) = curve[i + 1]
             if (progress <= x1) {
                 val t = (progress - x0) / (x1 - x0)
                 return y0 + t * (y1 - y0)
@@ -58,4 +46,12 @@ class WPrimeCritDataType(
         }
         return 0.0
     }
+
+    /** Prepend the fixed (0, 100) start and append the fixed (1, 0) end around the editable points. */
+    private fun buildFullCurve(points: List<CritCurvePoint>): List<Pair<Double, Double>> =
+        buildList {
+            add(0.0 to 100.0)
+            points.forEach { add((it.racePct / 100.0) to it.wPrimePct) }
+            add(1.0 to 0.0)
+        }
 }

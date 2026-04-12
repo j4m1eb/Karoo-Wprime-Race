@@ -21,7 +21,7 @@ class WPrimeTTDataType(
     override fun durationSec(config: WPrimeRaceConfig) = config.ttDurationMin * 60.0
     override fun showKj(config: WPrimeRaceConfig) = config.showKjTT
 
-    override fun targetPercent(elapsedSec: Double, durationSec: Double): Double {
+    override fun targetPercent(elapsedSec: Double, durationSec: Double, config: WPrimeRaceConfig): Double {
         if (durationSec <= 0) return 100.0
         return (100.0 * (1.0 - elapsedSec / durationSec)).coerceIn(0.0, 100.0)
     }

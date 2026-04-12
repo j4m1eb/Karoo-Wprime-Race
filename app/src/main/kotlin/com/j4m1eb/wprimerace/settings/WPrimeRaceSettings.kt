@@ -15,6 +15,8 @@ import kotlinx.coroutines.flow.map
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "wprime_race_settings")
 
+data class CritCurvePoint(val racePct: Double, val wPrimePct: Double)
+
 data class WPrimeRaceConfig(
     val criticalPower: Double = 250.0,
     val anaerobicCapacityKJ: Double = 20.0,    // stored and displayed in kJ; converted to J internally
@@ -26,8 +28,24 @@ data class WPrimeRaceConfig(
     val showKjTT: Boolean = false,
     val showKjCrit: Boolean = false,
     val showKjUsable: Boolean = false,
+    // Crit pacing curve — 4 interior breakpoints (start 0→100% and end 100→0% are always fixed)
+    val critCurve: List<CritCurvePoint> = DEFAULT_CRIT_CURVE,
 ) {
     val anaerobicCapacityJ: Double get() = anaerobicCapacityKJ * 1000.0
+
+    companion object {
+        // Default curve:
+        //   0–43%  hold 70%  (opening, conserve)
+        //  43–71%  hold 50%  (mid-race)
+        //  71–97%  hold 30%  (build)
+        //  97–100% empty the tank
+        val DEFAULT_CRIT_CURVE = listOf(
+            CritCurvePoint(racePct = 43.0, wPrimePct = 70.0),
+            CritCurvePoint(racePct = 71.0, wPrimePct = 50.0),
+            CritCurvePoint(racePct = 97.0, wPrimePct = 30.0),
+            CritCurvePoint(racePct = 99.0, wPrimePct = 10.0),  // steep final drop
+        )
+    }
 }
 
 class WPrimeRaceSettings(private val context: Context) {
@@ -42,6 +60,15 @@ class WPrimeRaceSettings(private val context: Context) {
         private val KEY_SHOW_KJ_TT = booleanPreferencesKey("show_kj_tt")
         private val KEY_SHOW_KJ_CRIT = booleanPreferencesKey("show_kj_crit")
         private val KEY_SHOW_KJ_USABLE = booleanPreferencesKey("show_kj_usable")
+        // Crit curve — 4 editable interior points
+        private val KEY_C1_RACE   = doublePreferencesKey("curve_1_race")
+        private val KEY_C1_WPRIME = doublePreferencesKey("curve_1_wprime")
+        private val KEY_C2_RACE   = doublePreferencesKey("curve_2_race")
+        private val KEY_C2_WPRIME = doublePreferencesKey("curve_2_wprime")
+        private val KEY_C3_RACE   = doublePreferencesKey("curve_3_race")
+        private val KEY_C3_WPRIME = doublePreferencesKey("curve_3_wprime")
+        private val KEY_C4_RACE   = doublePreferencesKey("curve_4_race")
+        private val KEY_C4_WPRIME = doublePreferencesKey("curve_4_wprime")
     }
 
     val configFlow: Flow<WPrimeRaceConfig> = context.dataStore.data.map { prefs ->
@@ -55,6 +82,24 @@ class WPrimeRaceSettings(private val context: Context) {
             showKjTT = prefs[KEY_SHOW_KJ_TT] ?: false,
             showKjCrit = prefs[KEY_SHOW_KJ_CRIT] ?: false,
             showKjUsable = prefs[KEY_SHOW_KJ_USABLE] ?: false,
+            critCurve = listOf(
+                CritCurvePoint(
+                    racePct   = prefs[KEY_C1_RACE]   ?: 43.0,
+                    wPrimePct = prefs[KEY_C1_WPRIME] ?: 70.0,
+                ),
+                CritCurvePoint(
+                    racePct   = prefs[KEY_C2_RACE]   ?: 71.0,
+                    wPrimePct = prefs[KEY_C2_WPRIME] ?: 50.0,
+                ),
+                CritCurvePoint(
+                    racePct   = prefs[KEY_C3_RACE]   ?: 97.0,
+                    wPrimePct = prefs[KEY_C3_WPRIME] ?: 30.0,
+                ),
+                CritCurvePoint(
+                    racePct   = prefs[KEY_C4_RACE]   ?: 99.0,
+                    wPrimePct = prefs[KEY_C4_WPRIME] ?: 10.0,
+                ),
+            ),
         )
     }.distinctUntilChanged()
 
@@ -69,6 +114,14 @@ class WPrimeRaceSettings(private val context: Context) {
             prefs[KEY_SHOW_KJ_TT] = config.showKjTT
             prefs[KEY_SHOW_KJ_CRIT] = config.showKjCrit
             prefs[KEY_SHOW_KJ_USABLE] = config.showKjUsable
+            prefs[KEY_C1_RACE]   = config.critCurve[0].racePct
+            prefs[KEY_C1_WPRIME] = config.critCurve[0].wPrimePct
+            prefs[KEY_C2_RACE]   = config.critCurve[1].racePct
+            prefs[KEY_C2_WPRIME] = config.critCurve[1].wPrimePct
+            prefs[KEY_C3_RACE]   = config.critCurve[2].racePct
+            prefs[KEY_C3_WPRIME] = config.critCurve[2].wPrimePct
+            prefs[KEY_C4_RACE]   = config.critCurve[3].racePct
+            prefs[KEY_C4_WPRIME] = config.critCurve[3].wPrimePct
         }
     }
 }

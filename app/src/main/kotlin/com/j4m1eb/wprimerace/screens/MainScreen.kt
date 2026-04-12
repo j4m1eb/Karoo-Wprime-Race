@@ -16,6 +16,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -43,6 +44,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.j4m1eb.wprimerace.extension.WPrimeModelType
+import com.j4m1eb.wprimerace.settings.CritCurvePoint
 import com.j4m1eb.wprimerace.settings.WPrimeRaceConfig
 import com.j4m1eb.wprimerace.settings.WPrimeRaceSettings
 import kotlinx.coroutines.delay
@@ -68,13 +70,32 @@ fun MainScreen(
     var showKjCrit by remember(config.showKjCrit) { mutableStateOf(config.showKjCrit) }
     var showKjUsable by remember(config.showKjUsable) { mutableStateOf(config.showKjUsable) }
 
+    // Crit curve — 4 editable interior points, stored as text pairs
+    var curveRace   by remember(config.critCurve) { mutableStateOf(config.critCurve.map { it.racePct.toInt().toString() }) }
+    var curveWPrime by remember(config.critCurve) { mutableStateOf(config.critCurve.map { it.wPrimePct.toInt().toString() }) }
+
     var savedVisible by remember { mutableStateOf(false) }
+
+    fun parseCurve(): List<CritCurvePoint>? {
+        return (0 until 4).map { i ->
+            val r = curveRace[i].toDoubleOrNull() ?: return null
+            val w = curveWPrime[i].toDoubleOrNull() ?: return null
+            CritCurvePoint(r, w)
+        }
+    }
+
+    fun resetCurve() {
+        val def = WPrimeRaceConfig.DEFAULT_CRIT_CURVE
+        curveRace   = def.map { it.racePct.toInt().toString() }
+        curveWPrime = def.map { it.wPrimePct.toInt().toString() }
+    }
 
     fun save() {
         val cp = cpText.toDoubleOrNull() ?: return
         val wPrime = wPrimeText.toDoubleOrNull() ?: return
         val tt = ttText.toDoubleOrNull() ?: return
         val crit = critText.toDoubleOrNull() ?: return
+        val curve = parseCurve() ?: return
         scope.launch {
             settings.save(
                 WPrimeRaceConfig(
@@ -87,6 +108,7 @@ fun MainScreen(
                     showKjTT = showKjTT,
                     showKjCrit = showKjCrit,
                     showKjUsable = showKjUsable,
+                    critCurve = curve,
                 )
             )
             savedVisible = true
@@ -153,6 +175,15 @@ fun MainScreen(
                 unit = "min",
                 onValueChange = { critText = it },
                 hint = "Total race duration",
+            )
+
+            CritCurveEditor(
+                raceValues      = curveRace,
+                wPrimeValues    = curveWPrime,
+                critDurationMin = critText.toDoubleOrNull() ?: 60.0,
+                onRaceChange   = { i, v -> curveRace   = curveRace.toMutableList().also   { l -> l[i] = v } },
+                onWPrimeChange = { i, v -> curveWPrime = curveWPrime.toMutableList().also { l -> l[i] = v } },
+                onReset = ::resetCurve,
             )
 
             // ── Display ────────────────────────────────────────────────────
@@ -303,6 +334,129 @@ private fun ModelDropdown(
                         onClick = { onSelected(m); expanded = false },
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CritCurveEditor(
+    raceValues: List<String>,
+    wPrimeValues: List<String>,
+    critDurationMin: Double,
+    onRaceChange: (Int, String) -> Unit,
+    onWPrimeChange: (Int, String) -> Unit,
+    onReset: () -> Unit,
+) {
+    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
+        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "Pacing Curve",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Button(
+                    onClick = onReset,
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                    ),
+                    modifier = Modifier.height(32.dp),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+                ) {
+                    Text("Reset to Default", style = MaterialTheme.typography.labelMedium)
+                }
+            }
+
+            // Column headers
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = "Race %",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f),
+                )
+                Text(
+                    text = "W\u2032 floor %",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+
+            // Fixed start row
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = "0%  (start)",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f).padding(top = 8.dp),
+                )
+                Text(
+                    text = "100%  (fixed)",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f).padding(top = 8.dp),
+                )
+            }
+
+            // 4 editable rows
+            for (i in 0 until 4) {
+                val racePct = raceValues[i].toDoubleOrNull()
+                val computedMin = if (racePct != null) (racePct / 100.0 * critDurationMin) else null
+                val minLabel = if (computedMin != null) "%.0f min".format(computedMin) else ""
+
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        OutlinedTextField(
+                            value = raceValues[i],
+                            onValueChange = { onRaceChange(i, it) },
+                            suffix = { Text("%") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp),
+                        )
+                        if (minLabel.isNotEmpty()) {
+                            Text(
+                                text = minLabel,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(start = 4.dp, top = 2.dp),
+                            )
+                        }
+                    }
+                    OutlinedTextField(
+                        value = wPrimeValues[i],
+                        onValueChange = { onWPrimeChange(i, it) },
+                        suffix = { Text("%") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(8.dp),
+                    )
+                }
+            }
+
+            // Fixed end row
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = "100%  (finish)",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f).padding(top = 4.dp),
+                )
+                Text(
+                    text = "0%  (fixed)",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f).padding(top = 4.dp),
+                )
             }
         }
     }

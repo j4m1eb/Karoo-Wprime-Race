@@ -45,8 +45,8 @@ abstract class WPrimeRaceDataTypeBase(
     /** Return the duration in seconds for this field type from the given config. */
     abstract fun durationSec(config: WPrimeRaceConfig): Double
 
-    /** Compute the target W'% at the given elapsed seconds and duration. */
-    abstract fun targetPercent(elapsedSec: Double, durationSec: Double): Double
+    /** Compute the target W'% at the given elapsed seconds, duration, and live config. */
+    abstract fun targetPercent(elapsedSec: Double, durationSec: Double, config: WPrimeRaceConfig): Double
 
     /** Whether this field should display in kJ (true) or % (false). */
     abstract fun showKj(config: WPrimeRaceConfig): Boolean
@@ -133,7 +133,7 @@ abstract class WPrimeRaceDataTypeBase(
                             if (elapsedOffset < 0) elapsedOffset = rawElapsedSec
                             val elapsed = (rawElapsedSec - elapsedOffset).coerceAtLeast(0.0)
                             calculator.update(power, System.currentTimeMillis())
-                            Triple(calculator.getWPrimePercent(), targetPercent(elapsed, durationSec(c)), power)
+                            Triple(calculator.getWPrimePercent(), targetPercent(elapsed, durationSec(c), c), power)
                         }
 
                 dataFlow.collect { (currentPct, targetPct, power) ->
