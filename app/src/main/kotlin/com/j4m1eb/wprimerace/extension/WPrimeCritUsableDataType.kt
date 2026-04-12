@@ -85,7 +85,7 @@ class WPrimeCritUsableDataType(
                 settings.configFlow,
             ) { p, e, c -> Triple(p, e, c) }.collect { (p, e, c) ->
                 val power = (p as? StreamState.Streaming)?.dataPoint?.singleValue ?: 0.0
-                val elapsed = (e as? StreamState.Streaming)?.dataPoint?.singleValue ?: 0.0
+                val elapsed = ((e as? StreamState.Streaming)?.dataPoint?.singleValue ?: 0.0) / 1000.0
                 calculator.update(power, System.currentTimeMillis())
 
                 val raceSec = c.critDurationMin * 60.0
@@ -133,7 +133,7 @@ class WPrimeCritUsableDataType(
                     settings.configFlow,
                 ) { p, e, c -> Triple(p, e, c) }.collect { (p, e, c) ->
                     val power = (p as? StreamState.Streaming)?.dataPoint?.singleValue ?: 0.0
-                    val elapsed = (e as? StreamState.Streaming)?.dataPoint?.singleValue ?: 0.0
+                    val elapsed = ((e as? StreamState.Streaming)?.dataPoint?.singleValue ?: 0.0) / 1000.0
                     calculator.update(power, System.currentTimeMillis())
 
                     val raceSec = c.critDurationMin * 60.0

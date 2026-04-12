@@ -68,7 +68,7 @@ abstract class WPrimeRaceDataTypeBase(
             // Keep calculator in sync with config changes
             launch {
                 settings.configFlow.collect { updated ->
-                    calculator.updateConfig(updated.criticalPower, updated.anaerobicCapacityJ, updated.ttDurationMin, updated.modelType)
+                    calculator.updateConfig(updated.criticalPower, updated.anaerobicCapacityJ, 300.0, updated.modelType)
                 }
             }
 
@@ -98,10 +98,18 @@ abstract class WPrimeRaceDataTypeBase(
                 val calculator = buildCalculator(cfg)
                 var latestConfig = cfg
 
-                // Reset on new ride
+                // elapsedOffset anchors elapsed time to when this recording started.
+                // Without this, a warm-up before the crit would make elapsed >> duration
+                // and target would read 0% from the first second.
+                var elapsedOffset = -1.0
+
+                // Reset on new ride — also re-anchor the elapsed offset
                 launch {
                     karooSystem.consumerFlow<RideState>().collect { state ->
-                        if (state is RideState.Recording) calculator.reset()
+                        if (state is RideState.Recording) {
+                            calculator.reset()
+                            elapsedOffset = -1.0
+                        }
                     }
                 }
 
@@ -109,11 +117,24 @@ abstract class WPrimeRaceDataTypeBase(
                 launch {
                     settings.configFlow.collect { updated ->
                         latestConfig = updated
-                        calculator.updateConfig(updated.criticalPower, updated.anaerobicCapacityJ, updated.ttDurationMin, updated.modelType)
+                        calculator.updateConfig(updated.criticalPower, updated.anaerobicCapacityJ, 300.0, updated.modelType)
                     }
                 }
 
-                val dataFlow = if (config.preview) previewFlow(cfg, calculator) else liveFlow(calculator)
+                val dataFlow = if (config.preview) previewFlow(cfg, calculator) else
+                    karooSystem.streamDataFlow(DataType.Type.SMOOTHED_3S_AVERAGE_POWER)
+                        .combine(karooSystem.streamDataFlow(DataType.Type.ELAPSED_TIME)) { p, e -> Pair(p, e) }
+                        .combine(settings.configFlow) { (p, e), c ->
+                            val power      = (p as? StreamState.Streaming)?.dataPoint?.singleValue ?: 0.0
+                            // ELAPSED_TIME is in milliseconds on Karoo — convert to seconds
+                            val rawElapsedSec = ((e as? StreamState.Streaming)?.dataPoint?.singleValue ?: 0.0) / 1000.0
+                            // First reading sets the offset so the curve always starts from 0
+                            // regardless of how long the rider was active before this field started
+                            if (elapsedOffset < 0) elapsedOffset = rawElapsedSec
+                            val elapsed = (rawElapsedSec - elapsedOffset).coerceAtLeast(0.0)
+                            calculator.update(power, System.currentTimeMillis())
+                            Triple(calculator.getWPrimePercent(), targetPercent(elapsed, durationSec(c)), power)
+                        }
 
                 dataFlow.collect { (currentPct, targetPct, power) ->
                     val view = withContext(Dispatchers.Main) {
@@ -144,20 +165,6 @@ abstract class WPrimeRaceDataTypeBase(
             viewJob.cancel()
         }
     }
-
-    // ── Live data flow ────────────────────────────────────────────────────────
-
-    private fun liveFlow(calculator: WPrimeCalculator) =
-        karooSystem.streamDataFlow(DataType.Type.POWER)
-            .combine(karooSystem.streamDataFlow(DataType.Type.ELAPSED_TIME)) { p, e -> Pair(p, e) }
-            .combine(settings.configFlow) { (p, e), cfg ->
-                val power = (p as? StreamState.Streaming)?.dataPoint?.singleValue ?: 0.0
-                val elapsed = (e as? StreamState.Streaming)?.dataPoint?.singleValue ?: 0.0
-                calculator.update(power, System.currentTimeMillis())
-                val currentPct = calculator.getWPrimePercent()
-                val targetPct = targetPercent(elapsed, durationSec(cfg))
-                Triple(currentPct, targetPct, power)
-            }
 
     // ── Preview flow ──────────────────────────────────────────────────────────
     // Sweeps current W'% through all four colour zones so every state is visible
