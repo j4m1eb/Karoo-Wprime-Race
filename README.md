@@ -116,6 +116,30 @@ Open the **W Prime Race** app on your Karoo and set:
 
 Tap **Save** — the button turns green to confirm.
 
+#### Crit Pacing Curve
+
+Below the crit duration is a **Pacing Curve** editor. This defines the 4 interior breakpoints of the depletion curve — the W′ floor you're targeting to hold at each stage of the race.
+
+| Column | Description |
+|--------|-------------|
+| **Race %** | How far through the race this phase ends |
+| **W′ floor %** | Minimum W′ balance to maintain until this point |
+
+The minute equivalent of each Race % is shown dynamically beneath the field, updating automatically when you change the crit duration.
+
+The start (0% → 100% W′) and finish (100% → 0% W′) are always fixed. Only the 4 interior points are editable.
+
+Tap **Reset to Default** to restore the recommended strategy:
+
+| Race % | ≈ Time (65 min) | W′ floor |
+|--------|-----------------|----------|
+| 43% | 28 min | 70% — conserve, cover wheels |
+| 71% | 46 min | 50% — controlled aggression |
+| 97% | 63 min | 30% — build to the finale |
+| 99% | 64 min | 10% — commit to the sprint |
+
+Between breakpoints the target is linearly interpolated. After the last breakpoint, the target drops to 0% at the finish — empty the tank.
+
 ### 3. Add Fields
 On your Karoo, go to a ride profile → Add fields → scroll to **W Prime Race** and add any combination of the four fields to your data pages.
 
@@ -138,17 +162,17 @@ Target W′% = 100 × (1 − elapsed / duration)
 ```
 At the halfway point your target is 50 %. A perfectly paced TT empties W′ at exactly the finish line.
 
-### Criterium (progressive)
-The crit curve depletes in four phases aligned with typical race dynamics:
+### Criterium (progressive, customisable)
+The crit curve depletes in phases aligned with typical race dynamics. The exact breakpoints are fully configurable in the app settings. The default strategy:
 
-| Phase | Race elapsed | Race remaining | W′ floor |
-|-------|-------------|----------------|----------|
-| Opening | 0–31 % | 100–69 % left | 70 % — conserve for early attacks |
-| Mid-race | 31–62 % | 69–38 % left | 50 % — controlled aggression |
-| Build | 62–92 % | 38–8 % left | 30 % — accumulate for the finale |
-| Finale | 92–100 % | 8–0 % left | 0 % — empty the tank |
+| Phase | Race elapsed | W′ floor |
+|-------|-------------|----------|
+| Opening | 0–43 % | 70 % — conserve, cover wheels |
+| Mid-race | 43–71 % | 50 % — controlled aggression |
+| Build | 71–97 % | 30 % — commit to moves |
+| Finale | 97–100 % | 0 % — empty the tank |
 
-The colour coding reflects how close your W′ is to the floor for that phase, not just the absolute value.
+Between breakpoints the target is linearly interpolated. The colour coding reflects how close your W′ is to the floor for the current phase, not just the absolute value.
 
 ---
 
