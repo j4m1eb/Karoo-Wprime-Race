@@ -1,25 +1,37 @@
 package com.j4m1eb.wprimerace.extension
 
+import com.j4m1eb.wprimerace.settings.CritCurvePoint
+
 /**
- * Shared floor-phase logic for the Crit floor data fields.
+ * Shared floor-phase logic for all crit fields.
  *
- * The race is divided into four phases based on progress through the total duration:
- *   0 – 31%  → hold 70% W'  (conserve, cover wheels)
- *  31 – 62%  → hold 50% W'  (mid-race, measured efforts)
- *  62 – 92%  → hold 30% W'  (final push, commit to moves)
- *  92 – 100% → hold  0% W'  (last 8% — empty the tank)
+ * The race is divided into phases defined by the rider's configurable curve.
+ * Each phase has a floor (minimum W' to hold). The floor STEPS at each phase
+ * boundary — it does not interpolate. This makes the target immediately actionable:
+ * "right now, do not go below X%".
+ *
+ * Example with default curve:
+ *   0 –  43%  → hold 70%
+ *  43 –  71%  → hold 50%
+ *  71 –  97%  → hold 30%
+ *  97 – 100%  → 0%  (empty the tank)
  */
 
-/** Returns the phase floor as a fraction of total W' (0.0 – 0.70). */
-fun critPhaseFloorFraction(elapsedSec: Double, raceDurationSec: Double): Double {
-    if (raceDurationSec <= 0) return 0.0
-    val progress = (elapsedSec / raceDurationSec).coerceIn(0.0, 1.0)
-    return when {
-        progress < 0.31 -> 0.70
-        progress < 0.62 -> 0.50
-        progress < 0.92 -> 0.30
-        else            -> 0.00
+/**
+ * Returns the current phase floor as a fraction of total W' (0.0–1.0),
+ * using the rider's configurable curve. Step function — no interpolation.
+ */
+fun critPhaseFloorFraction(
+    elapsedSec: Double,
+    raceDurationSec: Double,
+    curve: List<CritCurvePoint>,
+): Double {
+    if (raceDurationSec <= 0.0) return curve.firstOrNull()?.wPrimePct?.div(100.0) ?: 1.0
+    val progressPct = (elapsedSec / raceDurationSec).coerceIn(0.0, 1.0) * 100.0
+    for (point in curve) {
+        if (progressPct < point.racePct) return point.wPrimePct / 100.0
     }
+    return 0.0  // past the last breakpoint — empty the tank
 }
 
 /**

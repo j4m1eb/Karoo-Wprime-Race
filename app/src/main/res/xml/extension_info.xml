@@ -28,4 +28,10 @@
         description="@string/wprime_crit_usable_description"
         graphical="true"
         icon="@drawable/ic_wprime" />
+    <DataType
+        typeId="wprime-crit-zero"
+        displayName="@string/wprime_crit_zero_title"
+        description="@string/wprime_crit_zero_description"
+        graphical="true"
+        icon="@drawable/ic_wprime" />
 </ExtensionInfo>

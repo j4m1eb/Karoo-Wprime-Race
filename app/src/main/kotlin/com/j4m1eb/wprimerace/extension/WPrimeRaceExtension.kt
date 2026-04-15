@@ -18,6 +18,7 @@ class WPrimeRaceExtension : KarooExtension("karoowprimerace", BuildConfig.VERSIO
             WPrimeCritDataType(karooSystem, settings, extension),
             WPrimeCritTimeDataType(karooSystem, settings, extension),
             WPrimeCritUsableDataType(karooSystem, settings, extension),
+            WPrimeCritZeroDataType(karooSystem, settings, extension),
         )
     }
 

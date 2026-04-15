@@ -36,11 +36,8 @@ import kotlin.math.roundToInt
  * Shows how many seconds the rider can sustain current 3s power before W' drops to the
  * current phase floor. Displays "---" when recovering (power ≤ CP).
  *
- * Phase floors scale with race duration:
- *   0–31%  → hold 70% W'
- *  31–62%  → hold 50% W'
- *  62–92%  → hold 30% W'
- *  92–100% → hold  0% W'  (empty the tank)
+ * The phase floor is a step function from the rider's configurable curve — consistent
+ * with the W' Balance crit field and the Usable W' field.
  *
  * Colours:
  *   > 20s  → green   (comfortable)
@@ -66,10 +63,14 @@ class WPrimeCritTimeDataType(
         val job = scope.launch {
             val cfg = settings.configFlow.first()
             val calculator = WPrimeCalculator(cfg.criticalPower, cfg.anaerobicCapacityJ, modelType = cfg.modelType)
+            var elapsedOffset = -1.0
 
             launch {
                 karooSystem.consumerFlow<RideState>().collect { state ->
-                    if (state is RideState.Recording) calculator.reset()
+                    if (state is RideState.Recording) {
+                        calculator.reset()
+                        elapsedOffset = -1.0
+                    }
                 }
             }
             launch {
@@ -86,13 +87,14 @@ class WPrimeCritTimeDataType(
                 settings.configFlow,
             ) { p, e, c -> Triple(p, e, c) }.collect { (p, e, c) ->
                 val power = (p as? StreamState.Streaming)?.dataPoint?.singleValue ?: 0.0
-                val elapsed = ((e as? StreamState.Streaming)?.dataPoint?.singleValue ?: 0.0) / 1000.0
+                val rawElapsed = ((e as? StreamState.Streaming)?.dataPoint?.singleValue ?: 0.0) / 1000.0
+                if (elapsedOffset < 0) elapsedOffset = rawElapsed
+                val elapsed = (rawElapsed - elapsedOffset).coerceAtLeast(0.0)
                 calculator.update(power, System.currentTimeMillis())
 
                 val raceSec = c.critDurationMin * 60.0
-                val floorJ = critPhaseFloorFraction(elapsed, raceSec) * c.anaerobicCapacityJ
+                val floorJ = critPhaseFloorFraction(elapsed, raceSec, c.critCurve) * c.anaerobicCapacityJ
                 val seconds = timeToFloorSec(calculator.getCurrentWPrimeJ(), floorJ, power, c.criticalPower)
-                // Encode recovering state as -1 in the stream
                 val streamValue = if (seconds == Double.MAX_VALUE) -1.0 else seconds.coerceAtMost(999.0)
                 emitter.onNext(StreamState.Streaming(DataPoint(dataTypeId, mapOf(DataType.Field.SINGLE to streamValue))))
             }
@@ -114,10 +116,14 @@ class WPrimeCritTimeDataType(
                 val cfg = settings.configFlow.first()
                 val calculator = WPrimeCalculator(cfg.criticalPower, cfg.anaerobicCapacityJ, modelType = cfg.modelType)
                 var latestConfig = cfg
+                var elapsedOffset = -1.0
 
                 launch {
                     karooSystem.consumerFlow<RideState>().collect { state ->
-                        if (state is RideState.Recording) calculator.reset()
+                        if (state is RideState.Recording) {
+                            calculator.reset()
+                            elapsedOffset = -1.0
+                        }
                     }
                 }
                 launch {
@@ -133,11 +139,13 @@ class WPrimeCritTimeDataType(
                     settings.configFlow,
                 ) { p, e, c -> Triple(p, e, c) }.collect { (p, e, c) ->
                     val power = (p as? StreamState.Streaming)?.dataPoint?.singleValue ?: 0.0
-                    val elapsed = ((e as? StreamState.Streaming)?.dataPoint?.singleValue ?: 0.0) / 1000.0
+                    val rawElapsed = ((e as? StreamState.Streaming)?.dataPoint?.singleValue ?: 0.0) / 1000.0
+                    if (elapsedOffset < 0) elapsedOffset = rawElapsed
+                    val elapsed = (rawElapsed - elapsedOffset).coerceAtLeast(0.0)
                     calculator.update(power, System.currentTimeMillis())
 
                     val raceSec = c.critDurationMin * 60.0
-                    val floorJ = critPhaseFloorFraction(elapsed, raceSec) * c.anaerobicCapacityJ
+                    val floorJ = critPhaseFloorFraction(elapsed, raceSec, c.critCurve) * c.anaerobicCapacityJ
                     val seconds = timeToFloorSec(calculator.getCurrentWPrimeJ(), floorJ, power, c.criticalPower)
 
                     val mainNum  = if (seconds == Double.MAX_VALUE) "---" else "${seconds.roundToInt()}"
