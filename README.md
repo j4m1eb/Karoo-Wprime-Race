@@ -34,31 +34,40 @@ T: 97%     ↘    89%
 ---
 
 ### W′ Crit — Criterium Pacing
-Compares your W′ balance against a **progressive depletion curve** designed for criteriums and mass-start races. The target depletes slowly at the start (conserve), faster mid-race, and targets near-zero at the finish (empty the tank at the right moment).
+Compares your W′ balance against the **floor for the current race phase**. The target is a step function — it holds constant across the phase and drops at each phase boundary.
+
+**T: shows the floor you must not go below right now.** When the phase changes, T: jumps down to the next floor. This is intentionally different from the TT field — in a criterium you cannot and should not try to pace W′ per-second; you manage a floor.
 
 Layout identical to W′ TT above.
 
 ---
 
 ### W′ Usable
-Shows how much W′ is available **above your current race floor** — the minimum you need to keep in reserve to stay on the pacing plan.
+Shows how much W′ is available **above your current phase floor** — the amount you can actually spend on attacks and accelerations without compromising your race plan.
 
-A high number means you have headroom to attack. Near zero means you're already at your limit.
+A high number means headroom to attack. Near zero means you're already at your limit for this phase.
 
 Displays as **%** of total W′ (default) or **kJ** (configurable).
 
 ---
 
 ### W′ Time to Floor
-Shows how many **seconds** you can sustain your current 3s power before W′ drops to the phase floor. Displays `---` when you're recovering (power ≤ CP).
+Shows how many **seconds** you can sustain your current 3s power before W′ drops to the **current phase floor**. Displays `---` when you're recovering (power ≤ CP).
 
-Think of it as your remaining time-in-the-red budget.
+Use this to judge how long you can stay on a wheel or cover an attack before you hit your phase limit.
+
+---
+
+### W′ Time to Empty
+Shows how many **seconds** you can sustain your current 3s power before W′ hits **0% — going pop**. Displays `---` when recovering.
+
+No phase curve — this is the absolute limit regardless of race phase. Combined with Time to Floor it gives you two views: "how long until I breach my plan" and "how long until I completely blow up".
 
 ---
 
 ## Colour Coding
 
-All fields share the same colour scale based on how far W′ is behind the target:
+### W′ Crit, TT (gap between actual and target)
 
 | Colour | Meaning |
 |--------|---------|
@@ -66,6 +75,24 @@ All fields share the same colour scale based on how far W′ is behind the targe
 | 🟠 **Orange** | Slightly behind (gap ≤ 8 %) — manage your effort |
 | 🔴 **Red** | Well behind (gap 8–20 %) — back off |
 | 🟣 **Purple** | Critical (gap > 20 %) — in danger of blowing up |
+
+### W′ Usable (headroom above floor)
+
+| Colour | Meaning |
+|--------|---------|
+| 🟢 **Green** | > 20 % headroom — comfortable |
+| 🟠 **Orange** | 10–20 % — shrinking |
+| 🔴 **Red** | 5–10 % — nearly at floor |
+| 🟣 **Purple** | < 5 % — at or below floor |
+
+### W′ Time to Floor / Time to Empty
+
+| Colour | Meaning |
+|--------|---------|
+| 🟢 **Green** | > 20 s |
+| 🟠 **Orange** | 10–20 s |
+| 🔴 **Red** | 5–10 s |
+| 🟣 **Purple** | < 5 s |
 
 ---
 
@@ -118,30 +145,32 @@ Tap **Save** — the button turns green to confirm.
 
 #### Crit Pacing Curve
 
-Below the crit duration is a **Pacing Curve** editor. This defines the 4 interior breakpoints of the depletion curve — the W′ floor you're targeting to hold at each stage of the race.
+Below the crit duration is a **Pacing Curve** editor. This defines 4 phase breakpoints — the W′ floor to hold during each phase of the race.
 
 | Column | Description |
 |--------|-------------|
-| **Race %** | How far through the race this phase ends |
-| **W′ floor %** | Minimum W′ balance to maintain until this point |
+| **Race %** | The point at which this phase ends |
+| **W′ floor %** | Minimum W′ to hold during this phase |
 
-The minute equivalent of each Race % is shown dynamically beneath the field, updating automatically when you change the crit duration.
+The minute equivalent of each Race % updates dynamically based on the crit duration you've set above.
 
-The start (0% → 100% W′) and finish (100% → 0% W′) are always fixed. Only the 4 interior points are editable.
+The target is a **step function** — it holds at the phase floor and jumps down at each boundary. This is intentional: "don't go below 70% for the first 43% of the race" is actionable; a constantly moving target is not.
+
+The start (0 % → 100 % W′) and finish (100 % → 0 %) are always fixed. Only the 4 interior points are editable.
 
 Tap **Reset to Default** to restore the recommended strategy:
 
-| Race % | ≈ Time (65 min) | W′ floor |
-|--------|-----------------|----------|
-| 43% | 28 min | 70% — conserve, cover wheels |
-| 71% | 46 min | 50% — controlled aggression |
-| 97% | 63 min | 30% — build to the finale |
-| 99% | 64 min | 10% — commit to the sprint |
+| Race % | ≈ Time (65 min) | W′ floor | Phase |
+|--------|-----------------|----------|-------|
+| 43 % | 28 min | 70 % | Opening — conserve, cover wheels |
+| 71 % | 46 min | 50 % | Mid-race — controlled aggression |
+| 97 % | 63 min | 30 % | Build — commit to moves |
+| 99 % | 64 min | 10 % | Finale — commit to the sprint |
 
-Between breakpoints the target is linearly interpolated. After the last breakpoint, the target drops to 0% at the finish — empty the tank.
+After the last breakpoint, the target drops to 0 % — empty the tank.
 
 ### 3. Add Fields
-On your Karoo, go to a ride profile → Add fields → scroll to **W Prime Race** and add any combination of the four fields to your data pages.
+On your Karoo, go to a ride profile → Add fields → scroll to **W Prime Race** and add any combination of the five fields to your data pages.
 
 Fields support single-width and double-width layouts.
 
@@ -162,8 +191,8 @@ Target W′% = 100 × (1 − elapsed / duration)
 ```
 At the halfway point your target is 50 %. A perfectly paced TT empties W′ at exactly the finish line.
 
-### Criterium (progressive, customisable)
-The crit curve depletes in phases aligned with typical race dynamics. The exact breakpoints are fully configurable in the app settings. The default strategy:
+### Criterium (step function, customisable)
+The crit target is a **step function** based on phase floors. The target holds constant across each phase and jumps down at the boundary. The default strategy:
 
 | Phase | Race elapsed | W′ floor |
 |-------|-------------|----------|
@@ -172,7 +201,7 @@ The crit curve depletes in phases aligned with typical race dynamics. The exact 
 | Build | 71–97 % | 30 % — commit to moves |
 | Finale | 97–100 % | 0 % — empty the tank |
 
-Between breakpoints the target is linearly interpolated. The colour coding reflects how close your W′ is to the floor for the current phase, not just the absolute value.
+All crit fields (W′ Crit, Usable, Time to Floor) use the same phase boundaries — they are fully consistent with each other.
 
 ---
 
@@ -180,6 +209,7 @@ Between breakpoints the target is linearly interpolated. The colour coding refle
 
 - W′ updates from the **3s smoothed power** stream — responsive but not jerky
 - The extension resets W′ at the start of each new recording
+- Elapsed time is anchored to when recording starts — warm-up before a race does not corrupt the phase calculation
 - Settings update live — changes take effect within one refresh cycle
 - Fields work in both **portrait** (standard) and **landscape** layouts
 - Compatible with Karoo 2 and Karoo 3
