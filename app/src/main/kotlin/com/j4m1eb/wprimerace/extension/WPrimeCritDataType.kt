@@ -28,7 +28,9 @@ class WPrimeCritDataType(
 
     companion object { const val TYPE_ID = "wprime-crit" }
 
-    override fun durationSec(config: WPrimeRaceConfig) = config.critDurationMin * 60.0
+    override fun durationSec(config: WPrimeRaceConfig) = config.crit.durationMin * 60.0
+    override fun criticalPower(config: WPrimeRaceConfig) = config.crit.criticalPower
+    override fun wPrimeJ(config: WPrimeRaceConfig) = config.crit.anaerobicCapacityJ
     override fun showKj(config: WPrimeRaceConfig) = config.showKjCrit
 
     /**
@@ -36,5 +38,5 @@ class WPrimeCritDataType(
      * Holds constant within a phase and jumps down at each boundary.
      */
     override fun targetPercent(elapsedSec: Double, durationSec: Double, config: WPrimeRaceConfig): Double =
-        critPhaseFloorFraction(elapsedSec, durationSec, config.critCurve) * 100.0
+        critPhaseFloorFraction(elapsedSec, durationSec, config.crit.curve) * 100.0
 }

@@ -44,7 +44,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.j4m1eb.wprimerace.extension.WPrimeModelType
+import com.j4m1eb.wprimerace.settings.CritConfig
 import com.j4m1eb.wprimerace.settings.CritCurvePoint
+import com.j4m1eb.wprimerace.settings.TtConfig
 import com.j4m1eb.wprimerace.settings.WPrimeRaceConfig
 import com.j4m1eb.wprimerace.settings.WPrimeRaceSettings
 import kotlinx.coroutines.delay
@@ -60,10 +62,12 @@ fun MainScreen(
     val scope = rememberCoroutineScope()
 
     // Local editable state — seeded from persisted config
-    var cpText by remember(config.criticalPower) { mutableStateOf(config.criticalPower.toInt().toString()) }
-    var wPrimeText by remember(config.anaerobicCapacityKJ) { mutableStateOf(config.anaerobicCapacityKJ.toString()) }
-    var ttText by remember(config.ttDurationMin) { mutableStateOf(config.ttDurationMin.toString()) }
-    var critText by remember(config.critDurationMin) { mutableStateOf(config.critDurationMin.toString()) }
+    var ttCpText by remember(config.tt.criticalPower) { mutableStateOf(config.tt.criticalPower.toInt().toString()) }
+    var ttWPrimeText by remember(config.tt.anaerobicCapacityKJ) { mutableStateOf(config.tt.anaerobicCapacityKJ.toString()) }
+    var ttText by remember(config.tt.durationMin) { mutableStateOf(config.tt.durationMin.toString()) }
+    var critCpText by remember(config.crit.criticalPower) { mutableStateOf(config.crit.criticalPower.toInt().toString()) }
+    var critWPrimeText by remember(config.crit.anaerobicCapacityKJ) { mutableStateOf(config.crit.anaerobicCapacityKJ.toString()) }
+    var critText by remember(config.crit.durationMin) { mutableStateOf(config.crit.durationMin.toString()) }
     var model by remember(config.modelType) { mutableStateOf(config.modelType) }
     var showArrow by remember(config.showArrow) { mutableStateOf(config.showArrow) }
     var showKjTT by remember(config.showKjTT) { mutableStateOf(config.showKjTT) }
@@ -71,8 +75,8 @@ fun MainScreen(
     var showKjUsable by remember(config.showKjUsable) { mutableStateOf(config.showKjUsable) }
 
     // Crit curve — 4 editable interior points, stored as text pairs
-    var curveRace   by remember(config.critCurve) { mutableStateOf(config.critCurve.map { it.racePct.toInt().toString() }) }
-    var curveWPrime by remember(config.critCurve) { mutableStateOf(config.critCurve.map { it.wPrimePct.toInt().toString() }) }
+    var curveRace   by remember(config.crit.curve) { mutableStateOf(config.crit.curve.map { it.racePct.toInt().toString() }) }
+    var curveWPrime by remember(config.crit.curve) { mutableStateOf(config.crit.curve.map { it.wPrimePct.toInt().toString() }) }
 
     var savedVisible by remember { mutableStateOf(false) }
 
@@ -91,24 +95,32 @@ fun MainScreen(
     }
 
     fun save() {
-        val cp = cpText.toDoubleOrNull() ?: return
-        val wPrime = wPrimeText.toDoubleOrNull() ?: return
+        val ttCp = ttCpText.toDoubleOrNull() ?: return
+        val ttWPrime = ttWPrimeText.toDoubleOrNull() ?: return
         val tt = ttText.toDoubleOrNull() ?: return
+        val critCp = critCpText.toDoubleOrNull() ?: return
+        val critWPrime = critWPrimeText.toDoubleOrNull() ?: return
         val crit = critText.toDoubleOrNull() ?: return
         val curve = parseCurve() ?: return
         scope.launch {
             settings.save(
                 WPrimeRaceConfig(
-                    criticalPower = cp,
-                    anaerobicCapacityKJ = wPrime,
-                    ttDurationMin = tt,
-                    critDurationMin = crit,
+                    tt = TtConfig(
+                        criticalPower = ttCp,
+                        anaerobicCapacityKJ = ttWPrime,
+                        durationMin = tt,
+                    ),
+                    crit = CritConfig(
+                        criticalPower = critCp,
+                        anaerobicCapacityKJ = critWPrime,
+                        durationMin = crit,
+                        curve = curve,
+                    ),
                     modelType = model,
                     showArrow = showArrow,
                     showKjTT = showKjTT,
                     showKjCrit = showKjCrit,
                     showKjUsable = showKjUsable,
-                    critCurve = curve,
                 )
             )
             savedVisible = true
@@ -137,38 +149,49 @@ fun MainScreen(
         ) {
             Spacer(Modifier.height(4.dp))
 
-            // ── W' Parameters ──────────────────────────────────────────────
-            SectionHeader("W\u2032 Parameters")
+            // ── Model ──────────────────────────────────────────────────────
+            SectionHeader("W\u2032 Model")
 
             ModelDropdown(selected = model, onSelected = { model = it })
-
-            NumericField(
-                label = "Critical Power (CP)",
-                value = cpText,
-                unit = "W",
-                onValueChange = { cpText = it },
-            )
-            NumericField(
-                label = "Anaerobic Capacity (W\u2032)",
-                value = wPrimeText,
-                unit = "kJ",
-                onValueChange = { wPrimeText = it },
-            )
 
             // ── Time Trial ─────────────────────────────────────────────────
             SectionHeader("Time Trial")
 
             NumericField(
+                label = "TT Critical Power (CP)",
+                value = ttCpText,
+                unit = "W",
+                onValueChange = { ttCpText = it },
+            )
+            NumericField(
+                label = "TT W\u2032 Budget",
+                value = ttWPrimeText,
+                unit = "kJ",
+                onValueChange = { ttWPrimeText = it },
+            )
+            NumericField(
                 label = "TT Duration",
                 value = ttText,
                 unit = "min",
                 onValueChange = { ttText = it },
-                hint = "e.g. 21.5 for a 10-mile TT",
+                hint = "Use your TT pacing-budget values, e.g. CP 240 W / W\u2032 12 kJ for 65 min",
             )
 
             // ── Criterium ──────────────────────────────────────────────────
             SectionHeader("Criterium")
 
+            NumericField(
+                label = "Crit Critical Power (CP)",
+                value = critCpText,
+                unit = "W",
+                onValueChange = { critCpText = it },
+            )
+            NumericField(
+                label = "Crit Anaerobic Capacity (W\u2032)",
+                value = critWPrimeText,
+                unit = "kJ",
+                onValueChange = { critWPrimeText = it },
+            )
             NumericField(
                 label = "Crit Duration",
                 value = critText,

@@ -62,7 +62,7 @@ class WPrimeCritTimeDataType(
     override fun startStream(emitter: Emitter<StreamState>) {
         val job = scope.launch {
             val cfg = settings.configFlow.first()
-            val calculator = WPrimeCalculator(cfg.criticalPower, cfg.anaerobicCapacityJ, modelType = cfg.modelType)
+            val calculator = WPrimeCalculator(cfg.crit.criticalPower, cfg.crit.anaerobicCapacityJ, modelType = cfg.modelType)
             var elapsedOffset = -1.0
 
             launch {
@@ -75,7 +75,7 @@ class WPrimeCritTimeDataType(
             }
             launch {
                 settings.configFlow.collect { updated ->
-                    calculator.updateConfig(updated.criticalPower, updated.anaerobicCapacityJ, 300.0, updated.modelType)
+                    calculator.updateConfig(updated.crit.criticalPower, updated.crit.anaerobicCapacityJ, 300.0, updated.modelType)
                 }
             }
 
@@ -92,9 +92,9 @@ class WPrimeCritTimeDataType(
                 val elapsed = (rawElapsed - elapsedOffset).coerceAtLeast(0.0)
                 calculator.update(power, System.currentTimeMillis())
 
-                val raceSec = c.critDurationMin * 60.0
-                val floorJ = critPhaseFloorFraction(elapsed, raceSec, c.critCurve) * c.anaerobicCapacityJ
-                val seconds = timeToFloorSec(calculator.getCurrentWPrimeJ(), floorJ, power, c.criticalPower)
+                val raceSec = c.crit.durationMin * 60.0
+                val floorJ = critPhaseFloorFraction(elapsed, raceSec, c.crit.curve) * c.crit.anaerobicCapacityJ
+                val seconds = timeToFloorSec(calculator.getCurrentWPrimeJ(), floorJ, power, c.crit.criticalPower)
                 val streamValue = if (seconds == Double.MAX_VALUE) -1.0 else seconds.coerceAtMost(999.0)
                 emitter.onNext(StreamState.Streaming(DataPoint(dataTypeId, mapOf(DataType.Field.SINGLE to streamValue))))
             }
@@ -114,7 +114,7 @@ class WPrimeCritTimeDataType(
         val viewJob = scope.launch {
             try {
                 val cfg = settings.configFlow.first()
-                val calculator = WPrimeCalculator(cfg.criticalPower, cfg.anaerobicCapacityJ, modelType = cfg.modelType)
+                val calculator = WPrimeCalculator(cfg.crit.criticalPower, cfg.crit.anaerobicCapacityJ, modelType = cfg.modelType)
                 var latestConfig = cfg
                 var elapsedOffset = -1.0
 
@@ -129,7 +129,7 @@ class WPrimeCritTimeDataType(
                 launch {
                     settings.configFlow.collect { updated ->
                         latestConfig = updated
-                        calculator.updateConfig(updated.criticalPower, updated.anaerobicCapacityJ, 300.0, updated.modelType)
+                        calculator.updateConfig(updated.crit.criticalPower, updated.crit.anaerobicCapacityJ, 300.0, updated.modelType)
                     }
                 }
 
@@ -144,9 +144,9 @@ class WPrimeCritTimeDataType(
                     val elapsed = (rawElapsed - elapsedOffset).coerceAtLeast(0.0)
                     calculator.update(power, System.currentTimeMillis())
 
-                    val raceSec = c.critDurationMin * 60.0
-                    val floorJ = critPhaseFloorFraction(elapsed, raceSec, c.critCurve) * c.anaerobicCapacityJ
-                    val seconds = timeToFloorSec(calculator.getCurrentWPrimeJ(), floorJ, power, c.criticalPower)
+                    val raceSec = c.crit.durationMin * 60.0
+                    val floorJ = critPhaseFloorFraction(elapsed, raceSec, c.crit.curve) * c.crit.anaerobicCapacityJ
+                    val seconds = timeToFloorSec(calculator.getCurrentWPrimeJ(), floorJ, power, c.crit.criticalPower)
 
                     val mainNum  = if (seconds == Double.MAX_VALUE) "---" else "${seconds.roundToInt()}"
                     val mainUnit = if (seconds == Double.MAX_VALUE) "" else "s"

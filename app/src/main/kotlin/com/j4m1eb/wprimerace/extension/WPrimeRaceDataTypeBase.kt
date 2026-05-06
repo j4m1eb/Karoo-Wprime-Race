@@ -45,6 +45,10 @@ abstract class WPrimeRaceDataTypeBase(
     /** Return the duration in seconds for this field type from the given config. */
     abstract fun durationSec(config: WPrimeRaceConfig): Double
 
+    /** Return the CP/W' pair this field should use. */
+    abstract fun criticalPower(config: WPrimeRaceConfig): Double
+    abstract fun wPrimeJ(config: WPrimeRaceConfig): Double
+
     /** Compute the target W'% at the given elapsed seconds, duration, and live config. */
     abstract fun targetPercent(elapsedSec: Double, durationSec: Double, config: WPrimeRaceConfig): Double
 
@@ -68,7 +72,7 @@ abstract class WPrimeRaceDataTypeBase(
             // Keep calculator in sync with config changes
             launch {
                 settings.configFlow.collect { updated ->
-                    calculator.updateConfig(updated.criticalPower, updated.anaerobicCapacityJ, 300.0, updated.modelType)
+                    calculator.updateConfig(criticalPower(updated), wPrimeJ(updated), 300.0, updated.modelType)
                 }
             }
 
@@ -117,7 +121,7 @@ abstract class WPrimeRaceDataTypeBase(
                 launch {
                     settings.configFlow.collect { updated ->
                         latestConfig = updated
-                        calculator.updateConfig(updated.criticalPower, updated.anaerobicCapacityJ, 300.0, updated.modelType)
+                        calculator.updateConfig(criticalPower(updated), wPrimeJ(updated), 300.0, updated.modelType)
                     }
                 }
 
@@ -148,7 +152,7 @@ abstract class WPrimeRaceDataTypeBase(
                                 config = config,
                                 showArrow = latestConfig.showArrow,
                                 showKj = showKj(latestConfig),
-                                wPrimeJ = latestConfig.anaerobicCapacityJ,
+                                wPrimeJ = wPrimeJ(latestConfig),
                             )
                         }.remoteViews
                     }
@@ -175,7 +179,7 @@ abstract class WPrimeRaceDataTypeBase(
     private fun previewFlow(cfg: WPrimeRaceConfig, calculator: WPrimeCalculator) =
         kotlinx.coroutines.flow.flow<Triple<Double, Double, Double>> {
             var t = 0.0
-            val cp = cfg.criticalPower
+            val cp = criticalPower(cfg)
             while (true) {
                 val targetPct  = 80.0
                 // sine sweep: 70 + 22*sin → range [48, 92], period = 24 ticks = 12 s
@@ -190,8 +194,8 @@ abstract class WPrimeRaceDataTypeBase(
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private fun buildCalculator(cfg: WPrimeRaceConfig) = WPrimeCalculator(
-        cp = cfg.criticalPower,
-        wPrime = cfg.anaerobicCapacityJ,
+        cp = criticalPower(cfg),
+        wPrime = wPrimeJ(cfg),
         tau = 300.0,
         modelType = cfg.modelType,
     )

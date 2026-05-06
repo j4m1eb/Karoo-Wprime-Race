@@ -6,8 +6,19 @@
 
 set -e
 
-export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
-export PATH="$PATH:/Users/jamiebishop/Library/Android/sdk/platform-tools"
+if [ -d "/Applications/Android Studio.app/Contents/jbr/Contents/Home" ]; then
+  export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
+elif [ -d "/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home" ]; then
+  export JAVA_HOME="/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home"
+fi
+
+if [ -d "$HOME/Library/Android/sdk" ]; then
+  export ANDROID_HOME="$HOME/Library/Android/sdk"
+elif [ -d "/opt/homebrew/share/android-commandlinetools" ]; then
+  export ANDROID_HOME="/opt/homebrew/share/android-commandlinetools"
+fi
+
+export PATH="$PATH:$ANDROID_HOME/platform-tools"
 
 echo "Checking for connected device..."
 adb devices

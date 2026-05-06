@@ -17,22 +17,33 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 
 data class CritCurvePoint(val racePct: Double, val wPrimePct: Double)
 
-data class WPrimeRaceConfig(
+data class TtConfig(
+    val criticalPower: Double = 240.0,
+    val anaerobicCapacityKJ: Double = 12.0,
+    val durationMin: Double = 65.0,
+) {
+    val anaerobicCapacityJ: Double get() = anaerobicCapacityKJ * 1000.0
+}
+
+data class CritConfig(
     val criticalPower: Double = 250.0,
-    val anaerobicCapacityKJ: Double = 20.0,    // stored and displayed in kJ; converted to J internally
-    val ttDurationMin: Double = 21.0,
-    val critDurationMin: Double = 60.0,
+    val anaerobicCapacityKJ: Double = 20.0,
+    val durationMin: Double = 60.0,
+    val curve: List<CritCurvePoint> = WPrimeRaceConfig.DEFAULT_CRIT_CURVE,
+) {
+    val anaerobicCapacityJ: Double get() = anaerobicCapacityKJ * 1000.0
+}
+
+data class WPrimeRaceConfig(
+    val tt: TtConfig = TtConfig(),
+    val crit: CritConfig = CritConfig(),
     val modelType: WPrimeModelType = WPrimeModelType.SKIBA_DIFFERENTIAL,
     val showArrow: Boolean = true,
     // kJ display toggles — default off (% mode)
     val showKjTT: Boolean = false,
     val showKjCrit: Boolean = false,
     val showKjUsable: Boolean = false,
-    // Crit pacing curve — 4 interior breakpoints (start 0→100% and end 100→0% are always fixed)
-    val critCurve: List<CritCurvePoint> = DEFAULT_CRIT_CURVE,
 ) {
-    val anaerobicCapacityJ: Double get() = anaerobicCapacityKJ * 1000.0
-
     companion object {
         // Default curve:
         //   0–43%  hold 70%  (opening, conserve)
@@ -55,6 +66,12 @@ class WPrimeRaceSettings(private val context: Context) {
         private val KEY_WPRIME_KJ = doublePreferencesKey("wprime_kj")
         private val KEY_TT_DURATION = doublePreferencesKey("tt_duration_min")
         private val KEY_CRIT_DURATION = doublePreferencesKey("crit_duration_min")
+        private val KEY_TT_CP = doublePreferencesKey("tt_cp")
+        private val KEY_TT_WPRIME_KJ = doublePreferencesKey("tt_wprime_kj")
+        private val KEY_TT_DURATION_V2 = doublePreferencesKey("tt_duration_min_v2")
+        private val KEY_CRIT_CP = doublePreferencesKey("crit_cp")
+        private val KEY_CRIT_WPRIME_KJ = doublePreferencesKey("crit_wprime_kj")
+        private val KEY_CRIT_DURATION_V2 = doublePreferencesKey("crit_duration_min_v2")
         private val KEY_MODEL = stringPreferencesKey("model_type")
         private val KEY_SHOW_ARROW = booleanPreferencesKey("show_arrow")
         private val KEY_SHOW_KJ_TT = booleanPreferencesKey("show_kj_tt")
@@ -72,56 +89,70 @@ class WPrimeRaceSettings(private val context: Context) {
     }
 
     val configFlow: Flow<WPrimeRaceConfig> = context.dataStore.data.map { prefs ->
+        val legacyCp = prefs[KEY_CP]
+        val legacyWPrime = prefs[KEY_WPRIME_KJ]
+        val legacyTtDuration = prefs[KEY_TT_DURATION]
+        val legacyCritDuration = prefs[KEY_CRIT_DURATION]
+        val critCurve = listOf(
+            CritCurvePoint(
+                racePct   = prefs[KEY_C1_RACE]   ?: 43.0,
+                wPrimePct = prefs[KEY_C1_WPRIME] ?: 70.0,
+            ),
+            CritCurvePoint(
+                racePct   = prefs[KEY_C2_RACE]   ?: 71.0,
+                wPrimePct = prefs[KEY_C2_WPRIME] ?: 50.0,
+            ),
+            CritCurvePoint(
+                racePct   = prefs[KEY_C3_RACE]   ?: 97.0,
+                wPrimePct = prefs[KEY_C3_WPRIME] ?: 30.0,
+            ),
+            CritCurvePoint(
+                racePct   = prefs[KEY_C4_RACE]   ?: 99.0,
+                wPrimePct = prefs[KEY_C4_WPRIME] ?: 10.0,
+            ),
+        )
+
         WPrimeRaceConfig(
-            criticalPower = prefs[KEY_CP] ?: 250.0,
-            anaerobicCapacityKJ = prefs[KEY_WPRIME_KJ] ?: 20.0,
-            ttDurationMin = prefs[KEY_TT_DURATION] ?: 21.0,
-            critDurationMin = prefs[KEY_CRIT_DURATION] ?: 60.0,
+            tt = TtConfig(
+                criticalPower = prefs[KEY_TT_CP] ?: legacyCp ?: 240.0,
+                anaerobicCapacityKJ = prefs[KEY_TT_WPRIME_KJ] ?: legacyWPrime ?: 12.0,
+                durationMin = prefs[KEY_TT_DURATION_V2] ?: legacyTtDuration ?: 65.0,
+            ),
+            crit = CritConfig(
+                criticalPower = prefs[KEY_CRIT_CP] ?: legacyCp ?: 250.0,
+                anaerobicCapacityKJ = prefs[KEY_CRIT_WPRIME_KJ] ?: legacyWPrime ?: 20.0,
+                durationMin = prefs[KEY_CRIT_DURATION_V2] ?: legacyCritDuration ?: 60.0,
+                curve = critCurve,
+            ),
             modelType = WPrimeModelType.valueOf(prefs[KEY_MODEL] ?: WPrimeModelType.SKIBA_DIFFERENTIAL.name),
             showArrow = prefs[KEY_SHOW_ARROW] ?: true,
             showKjTT = prefs[KEY_SHOW_KJ_TT] ?: false,
             showKjCrit = prefs[KEY_SHOW_KJ_CRIT] ?: false,
             showKjUsable = prefs[KEY_SHOW_KJ_USABLE] ?: false,
-            critCurve = listOf(
-                CritCurvePoint(
-                    racePct   = prefs[KEY_C1_RACE]   ?: 43.0,
-                    wPrimePct = prefs[KEY_C1_WPRIME] ?: 70.0,
-                ),
-                CritCurvePoint(
-                    racePct   = prefs[KEY_C2_RACE]   ?: 71.0,
-                    wPrimePct = prefs[KEY_C2_WPRIME] ?: 50.0,
-                ),
-                CritCurvePoint(
-                    racePct   = prefs[KEY_C3_RACE]   ?: 97.0,
-                    wPrimePct = prefs[KEY_C3_WPRIME] ?: 30.0,
-                ),
-                CritCurvePoint(
-                    racePct   = prefs[KEY_C4_RACE]   ?: 99.0,
-                    wPrimePct = prefs[KEY_C4_WPRIME] ?: 10.0,
-                ),
-            ),
         )
     }.distinctUntilChanged()
 
     suspend fun save(config: WPrimeRaceConfig) {
         context.dataStore.edit { prefs ->
-            prefs[KEY_CP] = config.criticalPower
-            prefs[KEY_WPRIME_KJ] = config.anaerobicCapacityKJ
-            prefs[KEY_TT_DURATION] = config.ttDurationMin
-            prefs[KEY_CRIT_DURATION] = config.critDurationMin
+            prefs[KEY_TT_CP] = config.tt.criticalPower
+            prefs[KEY_TT_WPRIME_KJ] = config.tt.anaerobicCapacityKJ
+            prefs[KEY_TT_DURATION_V2] = config.tt.durationMin
+            prefs[KEY_CRIT_CP] = config.crit.criticalPower
+            prefs[KEY_CRIT_WPRIME_KJ] = config.crit.anaerobicCapacityKJ
+            prefs[KEY_CRIT_DURATION_V2] = config.crit.durationMin
             prefs[KEY_MODEL] = config.modelType.name
             prefs[KEY_SHOW_ARROW] = config.showArrow
             prefs[KEY_SHOW_KJ_TT] = config.showKjTT
             prefs[KEY_SHOW_KJ_CRIT] = config.showKjCrit
             prefs[KEY_SHOW_KJ_USABLE] = config.showKjUsable
-            prefs[KEY_C1_RACE]   = config.critCurve[0].racePct
-            prefs[KEY_C1_WPRIME] = config.critCurve[0].wPrimePct
-            prefs[KEY_C2_RACE]   = config.critCurve[1].racePct
-            prefs[KEY_C2_WPRIME] = config.critCurve[1].wPrimePct
-            prefs[KEY_C3_RACE]   = config.critCurve[2].racePct
-            prefs[KEY_C3_WPRIME] = config.critCurve[2].wPrimePct
-            prefs[KEY_C4_RACE]   = config.critCurve[3].racePct
-            prefs[KEY_C4_WPRIME] = config.critCurve[3].wPrimePct
+            prefs[KEY_C1_RACE]   = config.crit.curve[0].racePct
+            prefs[KEY_C1_WPRIME] = config.crit.curve[0].wPrimePct
+            prefs[KEY_C2_RACE]   = config.crit.curve[1].racePct
+            prefs[KEY_C2_WPRIME] = config.crit.curve[1].wPrimePct
+            prefs[KEY_C3_RACE]   = config.crit.curve[2].racePct
+            prefs[KEY_C3_WPRIME] = config.crit.curve[2].wPrimePct
+            prefs[KEY_C4_RACE]   = config.crit.curve[3].racePct
+            prefs[KEY_C4_WPRIME] = config.crit.curve[3].wPrimePct
         }
     }
 }

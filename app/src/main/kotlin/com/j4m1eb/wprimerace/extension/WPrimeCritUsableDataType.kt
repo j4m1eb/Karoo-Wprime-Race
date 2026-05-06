@@ -65,7 +65,7 @@ class WPrimeCritUsableDataType(
     override fun startStream(emitter: Emitter<StreamState>) {
         val job = scope.launch {
             val cfg = settings.configFlow.first()
-            val calculator = WPrimeCalculator(cfg.criticalPower, cfg.anaerobicCapacityJ, modelType = cfg.modelType)
+            val calculator = WPrimeCalculator(cfg.crit.criticalPower, cfg.crit.anaerobicCapacityJ, modelType = cfg.modelType)
             var elapsedOffset = -1.0
 
             launch {
@@ -78,7 +78,7 @@ class WPrimeCritUsableDataType(
             }
             launch {
                 settings.configFlow.collect { updated ->
-                    calculator.updateConfig(updated.criticalPower, updated.anaerobicCapacityJ, 300.0, updated.modelType)
+                    calculator.updateConfig(updated.crit.criticalPower, updated.crit.anaerobicCapacityJ, 300.0, updated.modelType)
                 }
             }
 
@@ -95,11 +95,11 @@ class WPrimeCritUsableDataType(
                 val elapsed = (rawElapsed - elapsedOffset).coerceAtLeast(0.0)
                 calculator.update(power, System.currentTimeMillis())
 
-                val raceSec = c.critDurationMin * 60.0
-                val floorFraction = critPhaseFloorFraction(elapsed, raceSec, c.critCurve)
-                val floorJ = floorFraction * c.anaerobicCapacityJ
+                val raceSec = c.crit.durationMin * 60.0
+                val floorFraction = critPhaseFloorFraction(elapsed, raceSec, c.crit.curve)
+                val floorJ = floorFraction * c.crit.anaerobicCapacityJ
                 val usableJ = (calculator.getCurrentWPrimeJ() - floorJ).coerceAtLeast(0.0)
-                val usablePct = if (c.anaerobicCapacityJ > 0) (usableJ / c.anaerobicCapacityJ) * 100.0 else 0.0
+                val usablePct = if (c.crit.anaerobicCapacityJ > 0) (usableJ / c.crit.anaerobicCapacityJ) * 100.0 else 0.0
 
                 emitter.onNext(StreamState.Streaming(DataPoint(dataTypeId, mapOf(DataType.Field.SINGLE to usablePct))))
             }
@@ -119,7 +119,7 @@ class WPrimeCritUsableDataType(
         val viewJob = scope.launch {
             try {
                 val cfg = settings.configFlow.first()
-                val calculator = WPrimeCalculator(cfg.criticalPower, cfg.anaerobicCapacityJ, modelType = cfg.modelType)
+                val calculator = WPrimeCalculator(cfg.crit.criticalPower, cfg.crit.anaerobicCapacityJ, modelType = cfg.modelType)
                 var latestConfig = cfg
                 var elapsedOffset = -1.0
 
@@ -134,7 +134,7 @@ class WPrimeCritUsableDataType(
                 launch {
                     settings.configFlow.collect { updated ->
                         latestConfig = updated
-                        calculator.updateConfig(updated.criticalPower, updated.anaerobicCapacityJ, 300.0, updated.modelType)
+                        calculator.updateConfig(updated.crit.criticalPower, updated.crit.anaerobicCapacityJ, 300.0, updated.modelType)
                     }
                 }
 
@@ -149,11 +149,11 @@ class WPrimeCritUsableDataType(
                     val elapsed = (rawElapsed - elapsedOffset).coerceAtLeast(0.0)
                     calculator.update(power, System.currentTimeMillis())
 
-                    val raceSec = c.critDurationMin * 60.0
-                    val floorFraction = critPhaseFloorFraction(elapsed, raceSec, c.critCurve)
-                    val floorJ = floorFraction * c.anaerobicCapacityJ
+                    val raceSec = c.crit.durationMin * 60.0
+                    val floorFraction = critPhaseFloorFraction(elapsed, raceSec, c.crit.curve)
+                    val floorJ = floorFraction * c.crit.anaerobicCapacityJ
                     val usableJ = (calculator.getCurrentWPrimeJ() - floorJ).coerceAtLeast(0.0)
-                    val usablePct = if (c.anaerobicCapacityJ > 0) (usableJ / c.anaerobicCapacityJ) * 100.0 else 0.0
+                    val usablePct = if (c.crit.anaerobicCapacityJ > 0) (usableJ / c.crit.anaerobicCapacityJ) * 100.0 else 0.0
 
                     val mainNum  = if (latestConfig.showKjUsable) "%.1f".format(usableJ / 1000.0)
                                    else "${usablePct.roundToInt()}"

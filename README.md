@@ -133,15 +133,19 @@ Open the **W Prime Race** app on your Karoo and set:
 
 | Setting | Description |
 |---------|-------------|
-| **Critical Power (W)** | Your CP — the cornerstone of all calculations |
-| **Anaerobic Capacity (kJ)** | Your W′ in kilojoules (typically 10–30 kJ) |
+| **TT Critical Power (W)** | CP/pacing baseline used only by the W′ TT field |
+| **TT W′ Budget (kJ)** | W′ budget used only by the W′ TT field |
 | **TT Duration (min)** | Your target finish time for time trial events |
+| **Crit Critical Power (W)** | CP used by the crit fields |
+| **Crit Anaerobic Capacity (kJ)** | W′ used by the crit fields |
 | **Crit Duration (min)** | Total expected race duration for criteriums |
 | **W′ Model** | Algorithm used for W′ tracking (see above) |
 | **Show Trend Arrow** | Show/hide the rotating direction arrow |
 | **TT / Crit / Usable — show kJ** | Display values in kJ instead of % |
 
 Tap **Save** — the button turns green to confirm.
+
+TT and Crit parameters are saved separately. This lets you use a TT pacing-budget setup, for example CP just below target power with a fixed kJ overage budget, without disturbing your physiological crit CP/W′ settings.
 
 #### Crit Pacing Curve
 
@@ -191,6 +195,8 @@ Target W′% = 100 × (1 − elapsed / duration)
 ```
 At the halfway point your target is 50 %. A perfectly paced TT empties W′ at exactly the finish line.
 
+The TT field uses the TT CP/W′/duration block only.
+
 ### Criterium (step function, customisable)
 The crit target is a **step function** based on phase floors. The target holds constant across each phase and jumps down at the boundary. The default strategy:
 
@@ -203,11 +209,14 @@ The crit target is a **step function** based on phase floors. The target holds c
 
 All crit fields (W′ Crit, Usable, Time to Floor) use the same phase boundaries — they are fully consistent with each other.
 
+The crit fields use the Crit CP/W′/duration/curve block only.
+
 ---
 
 ## Technical Notes
 
 - W′ updates from the **3s smoothed power** stream — responsive but not jerky
+- TT and Crit maintain separate CP/W′ settings, so race-type changes do not require re-entering numbers
 - The extension resets W′ at the start of each new recording
 - Elapsed time is anchored to when recording starts — warm-up before a race does not corrupt the phase calculation
 - Settings update live — changes take effect within one refresh cycle

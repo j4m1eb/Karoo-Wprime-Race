@@ -18,7 +18,9 @@ class WPrimeTTDataType(
 
     companion object { const val TYPE_ID = "wprime-tt" }
 
-    override fun durationSec(config: WPrimeRaceConfig) = config.ttDurationMin * 60.0
+    override fun durationSec(config: WPrimeRaceConfig) = config.tt.durationMin * 60.0
+    override fun criticalPower(config: WPrimeRaceConfig) = config.tt.criticalPower
+    override fun wPrimeJ(config: WPrimeRaceConfig) = config.tt.anaerobicCapacityJ
     override fun showKj(config: WPrimeRaceConfig) = config.showKjTT
 
     override fun targetPercent(elapsedSec: Double, durationSec: Double, config: WPrimeRaceConfig): Double {
